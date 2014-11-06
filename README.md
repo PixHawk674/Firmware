@@ -9,5 +9,4 @@
   * [Downloads](https://pixhawk.org/downloads)
 *   Mailing list: [Google Groups](http://groups.google.com/group/px4users)
 * Testing - James Jackson
-a new line
-hello world! -Ben
+* My changes
