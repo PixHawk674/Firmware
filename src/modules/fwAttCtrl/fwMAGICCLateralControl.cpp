@@ -375,12 +375,15 @@ FixedwingAttitudeControl::task_main()
 	/* wakeup source(s) */
 	struct pollfd fds[2];
 
+	//Current Values
+	float airspeed;
+
 	//Declare the setpoints to be used in the PID controllers
 	float roll_sp;
 	float pitch_sp;
 	float throttle_sp;
-	float altitude_sp;	//Note: There is a setpoint for z in vehicle_local_position_setpoint.
 	float airspeed_sp;	//Note: It doesn't appear there is anything to set a setpoint, this might need to be a parameter?
+	float airspeed_scaling;	//I think this we use this as the airspeed setpoint. - calculated within loop below
 
 	//outputs
 	float delta_e;
@@ -420,7 +423,7 @@ FixedwingAttitudeControl::task_main()
 	float ASP_kp;
 	float ASP_kd = 0;
 	float ASP_tau;
-	UAVpid.UAVpid airspeedPitchHold(&_airspeed.true_airspeed_m_s, &theta_c, &airspeed_sp,
+	UAVpid.UAVpid airspeedPitchHold(&_airspeed, &theta_c, &airspeed_scaling,
 		ASP_kp, ASP_ki, ASP_kd, theta_lim, -theta_lim,
 		ts, ASP_tau);
 
@@ -430,7 +433,7 @@ FixedwingAttitudeControl::task_main()
 	float AST_kp;
 	float AST_kd = 0;
 	float AST_tau;
-	UAVpid.UAVpid airspeedThrottleHold(&_airspeed.true_airspeed_m_s, &delta_t, &airspeed_sp,
+	UAVpid.UAVpid airspeedThrottleHold(&_airspeed, &delta_t, &airspeed_scaling,
 		AST_kp, AST_ki, AST_kd, 1, 0,
 		ts, AST_tau);
 
@@ -527,7 +530,7 @@ FixedwingAttitudeControl::task_main()
 
 				/* scale around tuning airspeed */
 
-				float airspeed;
+				
 
 				/* if airspeed is not updating, we assume the normal average speed */
 				if (bool nonfinite = !isfinite(_airspeed.true_airspeed_m_s) ||
@@ -549,9 +552,7 @@ FixedwingAttitudeControl::task_main()
 				 * Forcing the scaling to this value allows reasonable handheld tests.
 				 */
 
-				float airspeed_scaling = _parameters.airspeed_trim / ((airspeed < _parameters.airspeed_min) ? _parameters.airspeed_min : airspeed);
-
-
+				airspeed_scaling = _parameters.airspeed_trim / ((airspeed < _parameters.airspeed_min) ? _parameters.airspeed_min : airspeed);
 
 				//reset the set points
 				roll_sp = _parameters.rollsp_offset_rad;
@@ -559,8 +560,6 @@ FixedwingAttitudeControl::task_main()
 				throttle_sp = 0.0f;
 
 				
-
-
 				/* Read attitude setpoint from uorb if
 				 * - velocity control or position control is enabled (pos controller is running)
 				 * - manual control is disabled (another app may send the setpoint, but it should
