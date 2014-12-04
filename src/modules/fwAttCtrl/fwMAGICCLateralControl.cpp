@@ -375,6 +375,67 @@ FixedwingAttitudeControl::task_main()
 	/* wakeup source(s) */
 	struct pollfd fds[2];
 
+	//Declare the setpoints to be used in the PID controllers
+	float roll_sp;
+	float pitch_sp;
+	float throttle_sp;
+	float altitude_sp;	//Note: There is a setpoint for z in vehicle_local_position_setpoint.
+	float airspeed_sp;	//Note: It doesn't appear there is anything to set a setpoint, this might need to be a parameter?
+
+	//outputs
+	float delta_e;
+	float delta_a;
+	float delta_r;
+	float delta_t;
+
+	//intermediate outputs
+	float theta_c;
+
+
+	//Initialize Pitch-Hold Controller
+	float pitch_ki = _parameters.p_i;
+	float pitch_kp = _parameters.p_p;
+	float pitch_kd = 0;
+	float ts = 0.01;
+	float pitch_tau = _parameters.tconst;
+	float evelator_lim = 45.0 * (3.14159)/180.0
+	UAVpid.UAVpid pitchHold(&_att.pitch, &delta_e, &pitch_sp,
+		pitch_kp, pitch_ki, pitch_kd, ts,
+		pitch_tau, elevator_lim, -elevator_lim);
+
+
+	//Initialize Altitude-Hold Controller
+	float alt_ki;
+	float alt_kp;
+	float alt_kd = 0;
+	float alt_tau;
+	float theta_lim = 30.0 * (3.14159)/180.0;
+	UAVpid.UAVpid altitudeHold(&_global_pos.alt, &theta_c, &altitude_sp,
+		alt_kp, alt_ki, alt_kd, ts,
+		alt_tau, theta_lim, -theta_lim);
+
+
+	//Initialize Airspeed-With-Pitch-Hold Controller
+	float ASP_ki;
+	float ASP_kp;
+	float ASP_kd = 0;
+	float ASP_tau;
+	UAVpid.UAVpid airspeedPitchHold(&_airspeed.true_airspeed_m_s, &theta_c, &airspeed_sp,
+		ASP_kp, ASP_ki, ASP_kd, ts,
+		ASP_tau, theta_lim, -theta_lim);
+
+
+	//Initialize Airspeed-With-Throttle-Hold Controller
+	float AST_ki;
+	float AST_kp;
+	float AST_kd = 0;
+	float AST_tau;
+	UAVpid.UAVpid airspeedThrottleHold(&_airspeed.true_airspeed_m_s, &delta_t, &airspeed_sp,
+		AST_kp, AST_ki, AST_kd, ts,
+		AST_tau, 1, 0);
+
+
+
 	/* Setup of loop */
 	fds[0].fd = _params_sub;
 	fds[0].events = POLLIN;
@@ -490,9 +551,15 @@ FixedwingAttitudeControl::task_main()
 
 				float airspeed_scaling = _parameters.airspeed_trim / ((airspeed < _parameters.airspeed_min) ? _parameters.airspeed_min : airspeed);
 
-				float roll_sp = _parameters.rollsp_offset_rad;
-				float pitch_sp = _parameters.pitchsp_offset_rad;
-				float throttle_sp = 0.0f;
+
+
+				//reset the set points
+				roll_sp = _parameters.rollsp_offset_rad;
+				pitch_sp = _parameters.pitchsp_offset_rad;
+				throttle_sp = 0.0f;
+
+				
+
 
 				/* Read attitude setpoint from uorb if
 				 * - velocity control or position control is enabled (pos controller is running)
