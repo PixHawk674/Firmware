@@ -400,8 +400,8 @@ FixedwingAttitudeControl::task_main()
 	float pitch_tau = _parameters.tconst;
 	float evelator_lim = 45.0 * (3.14159)/180.0
 	UAVpid.UAVpid pitchHold(&_att.pitch, &delta_e, &pitch_sp,
-		pitch_kp, pitch_ki, pitch_kd, ts,
-		pitch_tau, elevator_lim, -elevator_lim);
+		pitch_kp, pitch_ki, pitch_kd, elevator_lim, -elevator_lim,
+		ts, pitch_tau);
 
 
 	//Initialize Altitude-Hold Controller
@@ -411,8 +411,8 @@ FixedwingAttitudeControl::task_main()
 	float alt_tau;
 	float theta_lim = 30.0 * (3.14159)/180.0;
 	UAVpid.UAVpid altitudeHold(&_global_pos.alt, &theta_c, &altitude_sp,
-		alt_kp, alt_ki, alt_kd, ts,
-		alt_tau, theta_lim, -theta_lim);
+		alt_kp, alt_ki, alt_kd, theta_lim, -theta_lim,
+		ts, alt_tau);
 
 
 	//Initialize Airspeed-With-Pitch-Hold Controller
@@ -421,8 +421,8 @@ FixedwingAttitudeControl::task_main()
 	float ASP_kd = 0;
 	float ASP_tau;
 	UAVpid.UAVpid airspeedPitchHold(&_airspeed.true_airspeed_m_s, &theta_c, &airspeed_sp,
-		ASP_kp, ASP_ki, ASP_kd, ts,
-		ASP_tau, theta_lim, -theta_lim);
+		ASP_kp, ASP_ki, ASP_kd, theta_lim, -theta_lim,
+		ts, ASP_tau);
 
 
 	//Initialize Airspeed-With-Throttle-Hold Controller
@@ -431,8 +431,8 @@ FixedwingAttitudeControl::task_main()
 	float AST_kd = 0;
 	float AST_tau;
 	UAVpid.UAVpid airspeedThrottleHold(&_airspeed.true_airspeed_m_s, &delta_t, &airspeed_sp,
-		AST_kp, AST_ki, AST_kd, ts,
-		AST_tau, 1, 0);
+		AST_kp, AST_ki, AST_kd, 1, 0,
+		ts, AST_tau);
 
 
 
