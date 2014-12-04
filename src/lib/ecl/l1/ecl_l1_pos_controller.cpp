@@ -89,11 +89,30 @@ void ECL_L1_Pos_Controller::navigate_waypoints(const math::Vector<2> &vector_A, 
 				       const math::Vector<2> &ground_speed_vector)
 {
 
+	/*
+	*  Inputs:
+	*   vector_A
+	*   vector_B: Desired next position
+	*   vector_curr_position: Current x, y location
+	*   ground_speed_vector: Ground speed in x and y
+	* 
+	*  Outputs:
+	*   _nav_bearing: bearing from current position to L1 point
+	*   _lateral_accel: Keep the calculation given here, for now. Not sure what it's for. 
+	*   _circle_mode: Whether or not we're flying a circle (false in this case)
+	*   _bearing_error: 
+	*
+	*  Other: eta, in the original, is "Angle created from V to the line L1." (Paper [1])
+	*
+	* [1] : http://acl.mit.edu/papers/gnc_park_deyst_how.pdf
+	* [2] : Google groups is all that's showing up... ?
+	*/
+
 	/* this follows the logic presented in [1] */
 
-	float eta;
-	float xtrack_vel;
-	float ltrack_vel;
+	float eta; // Angle from heading to the desired line.
+	float xtrack_vel; // Velocity perpendicular to line
+	float ltrack_vel; // velocity along line
 
 	/* get the direction between the last (visited) and next waypoint */
 	_target_bearing = get_bearing_to_next_waypoint(vector_curr_position(0), vector_curr_position(1), vector_B(0), vector_B(1));
@@ -140,7 +159,7 @@ void ECL_L1_Pos_Controller::navigate_waypoints(const math::Vector<2> &vector_A, 
 	float AB_to_BP_bearing = atan2f(vector_B_to_P_unit % vector_AB, vector_B_to_P_unit * vector_AB);
 
 	/* extension from [2], fly directly to A */
-	if (distance_A_to_airplane > _L1_distance && alongTrackDist / math::max(distance_A_to_airplane , 1.0f) < -0.7071f) {
+	if ( (distance_A_to_airplane > _L1_distance ) && (alongTrackDist / math::max(distance_A_to_airplane , 1.0f) ) < -0.7071f) {
 
 		/* calculate eta to fly to waypoint A */
 
@@ -214,10 +233,26 @@ void ECL_L1_Pos_Controller::navigate_waypoints(const math::Vector<2> &vector_A, 
 void ECL_L1_Pos_Controller::navigate_loiter(const math::Vector<2> &vector_A, const math::Vector<2> &vector_curr_position, float radius, int8_t loiter_direction,
 				       const math::Vector<2> &ground_speed_vector)
 {
+	/* Loiter is the same thing as orbit. Source: ardupilot google groups, 
+	*  which is here: https://code.google.com/p/ardupilot-mega/wiki/FlightModesLoiter */
 	/* the complete guidance logic in this section was proposed by [2] */
 
+	/*  Inputs:
+	*
+	* This allow orbits smaller than the L1 length,
+	* this modification was introduced in [2].
+	*
+	* @return sets _lateral_accel setpoint
+	*
+	*   - Vector_A: Possibly the next waypoint? Definitely *a* waypoint. 
+	*   - vector_curr_position: Current position, in x and y coordinates. 
+	*   - radius: Radius of the orbit, in meters I assume. 
+	*   - loiter_direction: +- 1, with +1 giving a ?clockwise? orbit. 
+	*   - ground_speed_vector: ground speed, in the x and y direction, in m/s.
+	*/
+
 	/* calculate the gains for the PD loop (circle tracking) */
-	float omega = (2.0f * M_PI_F / _L1_period);
+	float omega = (2.0f * M_PI_F / _L1_period);  // 2pi / L1_period -- loiter period? 
 	float K_crosstrack = omega * omega;
 	float K_velocity = 2.0f * _L1_damping * omega;
 
@@ -233,17 +268,17 @@ void ECL_L1_Pos_Controller::navigate_loiter(const math::Vector<2> &vector_A, con
 	/* calculate the vector from waypoint A to current position */
 	math::Vector<2> vector_A_to_airplane = get_local_planar_vector(vector_A, vector_curr_position);
 
-	math::Vector<2> vector_A_to_airplane_unit;
+	math::Vector<2> vector_A_to_airplane_unit;  // This is a unit vector, given the initialization in a few lines. 
 
 	/* prevent NaN when normalizing */
-	if (vector_A_to_airplane.length() > FLT_EPSILON) {
+	if (vector_A_to_airplane.length() > FLT_EPSILON) {  // gt floating point minimum resolution. 
 		/* store the normalized vector from waypoint A to current position */
 		vector_A_to_airplane_unit = vector_A_to_airplane.normalized();
 	} else {
 		vector_A_to_airplane_unit = vector_A_to_airplane;
 	}
 
-	/* calculate eta angle towards the loiter center */
+	/* calculate eta angle towards the loiter center */ // Oh, I've seen this before -- angle from north, basically.
 
 	/* velocity across / orthogonal to line from waypoint to current position */
 	float xtrack_vel_center = vector_A_to_airplane_unit % ground_speed_vector;
@@ -251,7 +286,7 @@ void ECL_L1_Pos_Controller::navigate_loiter(const math::Vector<2> &vector_A, con
 	float ltrack_vel_center = - (ground_speed_vector * vector_A_to_airplane_unit);
 	float eta = atan2f(xtrack_vel_center, ltrack_vel_center);
 	/* limit eta to 90 degrees */
-	eta = math::constrain(eta, -M_PI_F / 2.0f, +M_PI_F / 2.0f);
+	eta = math::constrain(eta, -M_PI_F / 2.0f, +M_PI_F / 2.0f); // M_PI_F is pi floating point. 
 
 	/* calculate the lateral acceleration to capture the center point */
 	float lateral_accel_sp_center = _K_L1 * ground_speed * ground_speed / _L1_distance * sinf(eta);
@@ -264,6 +299,7 @@ void ECL_L1_Pos_Controller::navigate_loiter(const math::Vector<2> &vector_A, con
 	float xtrack_err_circle = vector_A_to_airplane.length() - radius;
 
 	/* cross track error for feedback */
+	/* Cross track error is the distance you are away from the desired trajectory along the minimum norm to that trajectory. */
 	_crosstrack_error = xtrack_err_circle;
 
 	/* calculate PD update to circle waypoint */
