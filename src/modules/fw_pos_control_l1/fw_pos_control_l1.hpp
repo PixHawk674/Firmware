@@ -75,7 +75,7 @@
 #include <ecl/l1/ecl_l1_pos_controller.h>
 #include <external_lgpl/tecs/tecs.h>
 #include "landingslope.h"
-#include "mtecs/mTecs.h"
+#include <systemlib/mtecs/mTecs.h>
 
 using namespace launchdetection;
 
