@@ -52,8 +52,12 @@
 #include "topics/vehicle_local_position.h"
 #include "topics/vehicle_attitude_setpoint.h"
 #include "topics/vehicle_rates_setpoint.h"
+<<<<<<< HEAD
 #include "topics/x_command.h"
 #include "topics/x_hat.h"
+=======
+//#include "topics/x_command"
+>>>>>>> 8560b80e09fb0c73b5a343e6b4c87d3a8dc19fa4
 
 namespace uORB
 {
@@ -103,7 +107,7 @@ template class __EXPORT Subscription<vehicle_local_position_setpoint_s>;
 template class __EXPORT Subscription<vehicle_local_position_s>;
 template class __EXPORT Subscription<vehicle_attitude_setpoint_s>;
 template class __EXPORT Subscription<vehicle_rates_setpoint_s>;
-template class __EXPORT Subscription<x_command_s>;
-template class __EXPORT Subscription<x_hat_s>;
+//template class __EXPORT Subscription<x_command_s>;
+//template class __EXPORT Subscription<x_hat_s>;
 
 } // namespace uORB
