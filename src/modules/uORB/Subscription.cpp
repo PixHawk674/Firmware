@@ -52,12 +52,8 @@
 #include "topics/vehicle_local_position.h"
 #include "topics/vehicle_attitude_setpoint.h"
 #include "topics/vehicle_rates_setpoint.h"
-<<<<<<< HEAD
 #include "topics/x_command.h"
 #include "topics/x_hat.h"
-=======
-//#include "topics/x_command"
->>>>>>> 8560b80e09fb0c73b5a343e6b4c87d3a8dc19fa4
 
 namespace uORB
 {
