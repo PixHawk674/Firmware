@@ -51,10 +51,7 @@
  * @author Thomas Gubler <thomasgubler@gmail.com>
  */
 
-
-
 #include "fw_MAGICC_pos_ctrl.hpp"
-
 
 /**
  * L1 control app start / stop handling function

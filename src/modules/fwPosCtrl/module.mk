@@ -37,13 +37,14 @@
 
 MODULE_COMMAND	= fw_pos_control_l1
 
-SRCS		= mtecs/mTecs.cpp \
-		  mtecs/limitoverride.cpp \
-		  mtecs/mTecs_params.c \
-		  fw_MAGICC_pos_ctrl_main.cpp \
+SRCS		= fw_MAGICC_pos_ctrl_main.cpp \
 		  fw_MAGICC_params.c \
 		  MAGICC_path_follower.cpp \
 		  landingslope.cpp 
+		 # mtecs/mTecs.cpp \
+		 # mtecs/limitoverride.cpp \
+		 # mtecs/mTecs_params.c \
+
 
 
 MODULE_STACKSIZE = 1200

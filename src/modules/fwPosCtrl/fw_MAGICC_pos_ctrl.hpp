@@ -179,7 +179,7 @@ private:
 
 	MAGICCPathFollower				_l1_control;
 	TECS						_tecs;
-	fwPosCtrl::mTecs				_mTecs;
+	fwPosctrl::mTecs				_mTecs;
 	bool						_was_pos_control_mode;
 
 	struct {
