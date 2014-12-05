@@ -37,6 +37,11 @@
 *
 ****************************************************************************/
 
+using namespace launchdetection;
+
+static int	_control_task = -1;			/**< task handle for sensor task */
+
+
 class MAGICC_fw_pos_control
 {
 public:
@@ -128,7 +133,7 @@ private:
 	bool _global_pos_valid;				///< global position is valid
 	math::Matrix<3, 3> _R_nb;			///< current attitude
 
-	ECL_L1_Pos_Controller				_l1_control;
+	//ECL_L1_Pos_Controller				_MAGICC_control;
 	TECS						_tecs;
 	fwPosctrl::mTecs				_mTecs;
 	bool						_was_pos_control_mode;
@@ -324,6 +329,18 @@ private:
 
 };
 
+namespace MAGICC_control
+{
+
+/* oddly, ERROR is not defined for c++ */
+#ifdef ERROR
+# undef ERROR
+#endif
+static const int ERROR = -1;
+
+MAGICC_fw_pos_control	*g_control = nullptr; // Class instantiation
+}
+
 MAGICC_fw_pos_control::MAGICC_fw_pos_control() :
 
 	_mavlink_fd(-1),
@@ -378,7 +395,7 @@ MAGICC_fw_pos_control::MAGICC_fw_pos_control() :
 	_airspeed_last_valid(0),
 	_groundspeed_undershoot(0.0f),
 	_global_pos_valid(false),
-	_l1_control(),
+	_MAGICC_control(),
 	_mTecs(),
 	_was_pos_control_mode(false)
 {
@@ -453,7 +470,7 @@ MAGICC_fw_pos_control::~MAGICC_fw_pos_control()
 		} while (_control_task != -1);
 	}
 
-	l1_control::g_control = nullptr;
+	MAGICC_control::g_control = nullptr;
 }
 
 int
@@ -512,9 +529,9 @@ MAGICC_fw_pos_control::parameters_update()
 	param_get(_parameter_handles.land_flare_pitch_max_deg, &(_parameters.land_flare_pitch_max_deg));
 	param_get(_parameter_handles.land_use_terrain_estimate, &(_parameters.land_use_terrain_estimate));
 
-	_l1_control.set_l1_damping(_parameters.l1_damping);
-	_l1_control.set_l1_period(_parameters.l1_period);
-	_l1_control.set_l1_roll_limit(math::radians(_parameters.roll_limit));
+	_MAGICC_control.set_l1_damping(_parameters.l1_damping);
+	_MAGICC_control.set_l1_period(_parameters.l1_period);
+	_MAGICC_control.set_l1_roll_limit(math::radians(_parameters.roll_limit));
 
 	_tecs.set_time_const(_parameters.time_const);
 	_tecs.set_time_const_throt(_parameters.time_const_throt);

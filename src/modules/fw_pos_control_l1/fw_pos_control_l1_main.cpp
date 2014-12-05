@@ -51,49 +51,9 @@
  * @author Thomas Gubler <thomasgubler@gmail.com>
  */
 
-#include <nuttx/config.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <math.h>
-#include <poll.h>
-#include <time.h>
-#include <drivers/drv_hrt.h>
-#include <drivers/drv_accel.h>
-#include <arch/board/board.h>
-#include <uORB/uORB.h>
-#include <uORB/topics/airspeed.h>
-#include <uORB/topics/vehicle_global_position.h>
-#include <uORB/topics/position_setpoint_triplet.h>
-#include <uORB/topics/vehicle_attitude_setpoint.h>
-#include <uORB/topics/manual_control_setpoint.h>
-#include <uORB/topics/actuator_controls.h>
-#include <uORB/topics/vehicle_rates_setpoint.h>
-#include <uORB/topics/vehicle_attitude.h>
-#include <uORB/topics/vehicle_control_mode.h>
-#include <uORB/topics/navigation_capabilities.h>
-#include <uORB/topics/sensor_combined.h>
-#include <uORB/topics/parameter_update.h>
-#include <systemlib/param/param.h>
-#include <systemlib/err.h>
-#include <systemlib/pid/pid.h>
-#include <geo/geo.h>
-#include <systemlib/perf_counter.h>
-#include <systemlib/systemlib.h>
-#include <mathlib/mathlib.h>
-#include <mavlink/mavlink_log.h>
-#include <launchdetection/LaunchDetector.h>
-#include <ecl/l1/ecl_l1_pos_controller.h>
-#include <external_lgpl/tecs/tecs.h>
-#include "landingslope.h"
-#include "mtecs/mTecs.h"
 
-#include "fw_pos_contrl_l1.hpp"
 
-static int	_control_task = -1;			/**< task handle for sensor task */
+#include "fw_pos_control_l1.hpp"
 
 
 /**
@@ -103,21 +63,8 @@ static int	_control_task = -1;			/**< task handle for sensor task */
  */
 extern "C" __EXPORT int fw_pos_control_l1_main(int argc, char *argv[]);
 
-using namespace launchdetection;
+extern int	_control_task;
 
-
-
-namespace l1_control
-{
-
-/* oddly, ERROR is not defined for c++ */
-#ifdef ERROR
-# undef ERROR
-#endif
-static const int ERROR = -1;
-
-FixedwingPositionControl	*g_control = nullptr;
-}
 
 void FixedwingPositionControl::task_main_trampoline(int argc, char *argv[])
 {

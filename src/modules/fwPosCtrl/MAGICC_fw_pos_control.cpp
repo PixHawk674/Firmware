@@ -84,7 +84,7 @@
 
 #include "MAGICC_fw_pos_control.hpp"
 
-static int	_control_task = -1;			/**< task handle for sensor task */
+extern int	_control_task;			/**< task handle for sensor task */
 
 
 /**
@@ -95,20 +95,6 @@ static int	_control_task = -1;			/**< task handle for sensor task */
 extern "C" __EXPORT int fw_pos_control_l1_main(int argc, char *argv[]);
 
 using namespace launchdetection; // Don't touch, for I don't know what it is.
-
-
-
-namespace MAGICC_control
-{
-
-/* oddly, ERROR is not defined for c++ */
-#ifdef ERROR
-# undef ERROR
-#endif
-static const int ERROR = -1;
-
-MAGICC_fw_pos_control	*g_control = nullptr; // Class instantiation
-}
 
 void MAGICC_fw_pos_control::task_main_trampoline(int argc, char *argv[])
 {
