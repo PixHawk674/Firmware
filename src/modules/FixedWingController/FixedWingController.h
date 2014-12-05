@@ -40,22 +40,22 @@
  *
  * @ingroup apps
  */
-extern "C" __EXPORT int fwMAGICCLateralControlMain(int argc, char *argv[]);
+extern "C" __EXPORT int FixedWingControllerMain(int argc, char *argv[]);
 
 
 
-class fwMAGICCLateralControl
+class FixedWingController
 {
 public:
 	/**
 	 * Constructor
 	 */
-	fwMAGICCLateralControl();
+	FixedWingController();
 
 	/**
 	 * Destructor, also kills the sensors task.
 	 */
-	~fwMAGICCLateralControl();
+	~FixedWingController();
 
 	/**
 	 * Start the sensors task.
@@ -87,6 +87,7 @@ private:
 	int 		_manual_sub;			/**< notification of manual control updates */
 	int		_global_pos_sub;		/**< global position subscription */
 	int		_vehicle_status_sub;		/**< vehicle status subscription */
+	int		_pos_sp_triplet_sub;		/**< waypoing subscriber (hack to get airspeed)
 
 	orb_advert_t	_rate_sp_pub;			/**< rate setpoint publication */
 	orb_advert_t	_attitude_sp_pub;		/**< attitude setpoint point */
@@ -103,6 +104,10 @@ private:
 	struct actuator_controls_s			_actuators_airframe;	/**< actuator control inputs */
 	struct vehicle_global_position_s		_global_pos;		/**< global position */
 	struct vehicle_status_s				_vehicle_status;	/**< vehicle status */
+	struct position_setpoint_triplet_s		_pos_sp_triplet;	/**< waypoints, to be replaced by something more elegant later */
+	struct x_command_s				_x_command;		/**< commands structure */
+	struct x_hat_s					_x_hat;			/**< estimates */
+	
 
 	perf_counter_t	_loop_perf;			/**< loop performance counter */
 	perf_counter_t	_nonfinite_input_perf;		/**< performance counter for non finite input */
@@ -223,6 +228,7 @@ private:
 	 * Check for airspeed updates.
 	 */
 	void		vehicle_airspeed_poll();
+ 
 
 	/**
 	 * Check for accel updates.
@@ -245,6 +251,16 @@ private:
 	void		vehicle_status_poll();
 
 	/**
+	 * Check for new commands
+	 */
+	 void 		x_command_poll();
+
+	/**
+	 * Check for new estimates
+	 */
+	 void  		x_hat_poll();
+
+	/**
 	 * Shim for calling task_main from task_create.
 	 */
 	static void	task_main_trampoline(int argc, char *argv[]);
@@ -254,19 +270,26 @@ private:
 	 */
 	void		task_main();
 
+
+
+	/**
+	 *
+	 */
+
+
 };
 
-int fwMAGICCLateralControlMain(int argc, char *argv[])
+int FixedWingControllerMain(int argc, char *argv[])
 {
 	if (argc < 1)
-		errx(1, "usage: fwMAGICCLateralControl {start|stop|status}");
+		errx(1, "usage: FixedWingController {start|stop|status}");
 
 	if (!strcmp(argv[1], "start")) {
 
 		if (att_control::g_control != nullptr)
 			errx(1, "already running");
 
-		att_control::g_control = new fwMAGICCLateralControl;
+		att_control::g_control = new FixedWingController;
 
 		if (att_control::g_control == nullptr)
 			errx(1, "alloc failed");

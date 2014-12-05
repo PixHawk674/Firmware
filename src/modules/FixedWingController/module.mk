@@ -35,10 +35,10 @@
 # Fixedwing attitude control application
 #
 
-MODULE_COMMAND	= fwMAGICCAttitudeControl
+MODULE_COMMAND	= FixedWingController
 
-SRCS		= fwMAGICCAttitudeControl.cpp \
-                  fwMAGICCAttitudeControl.cpp \
-		  fwMAGICCAttitudeControlParams.c
+SRCS		= FixedWingController.cpp \
+                  FixedWingController.cpp \
+		  FixedWingControllerParams.c
 
 MODULE_STACKSIZE = 1200
