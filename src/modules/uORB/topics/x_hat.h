@@ -38,8 +38,8 @@
  * @author James Jackson <james.s.jackson@byu.edu>
  */
 
-#ifndef VEHICLE_GLOBAL_POSITION_T_H_
-#define VEHICLE_GLOBAL_POSITION_T_H_
+#ifndef TOPIC_X_HAT_
+#define TOPIC_X_HAT_
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -75,14 +75,10 @@ struct x_hat_s {
 	float wn;
 	float we;
 	float psi;
-	double covariance[9][9];
+	float covariance[9][9];
 };
 
-/**
- * @}
- */
-
 /* register this as object request broker structure */
-ORB_DECLARE(vehicle_global_position);
+ORB_DECLARE(x_hat);
 
 #endif

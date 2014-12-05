@@ -37,11 +37,10 @@
  * Definition of the vehicle attitude setpoint uORB topic.
  */
 
-#ifndef TOPIC_VEHICLE_ATTITUDE_SETPOINT_H_
-#define TOPIC_VEHICLE_ATTITUDE_SETPOINT_H_
+#ifndef TOPIC_X_COMMAND_
+#define TOPIC_X_COMMAND_
 
 #include <stdint.h>
-#include <stdbool.h>
 #include "../uORB.h"
 
 /**
@@ -74,6 +73,6 @@ struct x_command_s {
  */
 
 /* register this as object request broker structure */
-ORB_DECLARE(vehicle_attitude_setpoint);
+ORB_DECLARE(x_command);
 
 #endif /* TOPIC_ARDRONE_CONTROL_H_ */
