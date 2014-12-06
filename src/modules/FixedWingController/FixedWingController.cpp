@@ -52,10 +52,10 @@ namespace LateralControl
 #endif
 static const int ERROR = -1;
 
-FixedwingAttitudeControl	*g_control = nullptr;
+FixedWingController	*g_control = nullptr;
 }
 
-FixedwingAttitudeControl::FixedwingAttitudeControl() :
+FixedWingController::FixedWingController() :
 
 	_task_should_exit(false),
 	_task_running(false),
@@ -138,7 +138,7 @@ FixedwingAttitudeControl::FixedwingAttitudeControl() :
 	parameters_update();
 }
 
-FixedwingAttitudeControl::~FixedwingAttitudeControl()
+FixedWingController::~FixedWingController()
 {
 	if (_control_task != -1) {
 
@@ -168,7 +168,7 @@ FixedwingAttitudeControl::~FixedwingAttitudeControl()
 }
 
 int
-FixedwingAttitudeControl::parameters_update()
+FixedWingController::parameters_update()
 {
 
 	param_get(_parameter_handles.tconst, &(_parameters.tconst));
@@ -241,7 +241,7 @@ FixedwingAttitudeControl::parameters_update()
 }
 
 void
-FixedwingAttitudeControl::vehicle_control_mode_poll()
+FixedWingController::vehicle_control_mode_poll()
 {
 	bool vcontrol_mode_updated;
 
@@ -255,7 +255,7 @@ FixedwingAttitudeControl::vehicle_control_mode_poll()
 }
 
 void
-FixedwingAttitudeControl::vehicle_manual_poll()
+FixedWingController::vehicle_manual_poll()
 {
 	bool manual_updated;
 
@@ -269,7 +269,7 @@ FixedwingAttitudeControl::vehicle_manual_poll()
 }
 
 void
-FixedwingAttitudeControl::vehicle_airspeed_poll()
+FixedWingController::vehicle_airspeed_poll()
 {
 	/* check if there is a new position */
 	bool airspeed_updated;
@@ -282,7 +282,7 @@ FixedwingAttitudeControl::vehicle_airspeed_poll()
 }
 
 void
-FixedwingAttitudeControl::vehicle_accel_poll()
+FixedWingController::vehicle_accel_poll()
 {
 	/* check if there is a new position */
 	bool accel_updated;
@@ -294,7 +294,7 @@ FixedwingAttitudeControl::vehicle_accel_poll()
 }
 
 void
-FixedwingAttitudeControl::vehicle_setpoint_poll()
+FixedWingController::vehicle_setpoint_poll()
 {
 	/* check if there is a new setpoint */
 	bool att_sp_updated;
@@ -307,7 +307,7 @@ FixedwingAttitudeControl::vehicle_setpoint_poll()
 }
 
 void
-FixedwingAttitudeControl::global_pos_poll()
+FixedWingController::global_pos_poll()
 {
 	/* check if there is a new global position */
 	bool global_pos_updated;
@@ -319,7 +319,7 @@ FixedwingAttitudeControl::global_pos_poll()
 }
 
 void
-FixedwingAttitudeControl::vehicle_status_poll()
+FixedWingController::vehicle_status_poll()
 {
 	/* check if there is new status information */
 	bool vehicle_status_updated;
@@ -331,7 +331,7 @@ FixedwingAttitudeControl::vehicle_status_poll()
 }
 
 void
-FixedwingAttitudeControl::x_command_poll()
+FixedWingController::x_command_poll()
 {
 	//Poll the attitude setpoint (roll, pitch, yaw)
 	vehicle_setpoint_poll();
@@ -363,7 +363,7 @@ FixedwingAttitudeControl::x_command_poll()
 }
 
 void
-FixedwingAttitudeControl::x_hat_poll()
+FixedWingController::x_hat_poll()
 {
 	bool x_hat_updated;
 	orb_check(_x_hat_sub, &x_hat_updated);
@@ -375,13 +375,13 @@ FixedwingAttitudeControl::x_hat_poll()
 }
 
 void
-FixedwingAttitudeControl::task_main_trampoline(int argc, char *argv[])
+FixedWingController::task_main_trampoline(int argc, char *argv[])
 {
 	att_control::g_control->task_main();
 }
 
 void
-FixedwingAttitudeControl::task_main()
+FixedWingController::task_main()
 {
 
 	/* inform about start */
@@ -429,8 +429,8 @@ FixedwingAttitudeControl::task_main()
 	float roll_sp;
 	float pitch_sp;
 	float throttle_sp;
-	float airspeed_sp;	//Note: It doesn't appear there is anything to set a setpoint, this might need to be a parameter?
-	float airspeed_scaling;	//I think this we use this as the airspeed setpoint. - calculated within loop below
+	float airspeed_sp;	
+	float airspeed_scaling;	
 
 	//outputs
 	float delta_e;
@@ -449,7 +449,7 @@ FixedwingAttitudeControl::task_main()
 	float ts = 0.01;
 	float pitch_tau = _parameters.tconst;
 	float evelator_lim = 45.0 * (3.14159)/180.0
-	UAVpid.UAVpid pitchHold(&_att.pitch, &delta_e, &pitch_sp,
+	UAVpid.UAVpid pitchHold(&_x_hat.theta, &delta_e, &_x_command.pitch,
 		pitch_kp, pitch_ki, pitch_kd, elevator_lim, -elevator_lim,
 		ts, pitch_tau);
 
@@ -460,7 +460,7 @@ FixedwingAttitudeControl::task_main()
 	float alt_kd = 0;
 	float alt_tau;
 	float theta_lim = 30.0 * (3.14159)/180.0;
-	UAVpid.UAVpid altitudeHold(&_global_pos.alt, &theta_c, &altitude_sp,
+	UAVpid.UAVpid altitudeHold(&_x_hat.h, &theta_c, &_x_command_h,
 		alt_kp, alt_ki, alt_kd, theta_lim, -theta_lim,
 		ts, alt_tau);
 
@@ -553,6 +553,7 @@ FixedwingAttitudeControl::task_main()
 			vehicle_status_poll();
 
 			x_command_poll();
+			
 			x_hat_poll();
 
 			/* lock integrator until control is started */
@@ -698,6 +699,42 @@ FixedwingAttitudeControl::task_main()
 				}
 
 				/* Run attitude controllers */
+				float h = _x_hat.h;
+				float h_c = -_x_command.pd;
+
+				if(h < _parameters.altitude_takeoff_zone)
+				{
+					//In take-off zone
+					delta_t = 1;
+					theta_c = _parameters.theta_takeoff;
+				}
+				else if(h <= h_c - _parameters.altitude_hold_zone)
+				{
+					//In Climb Zone
+					delta_t = 1;
+					airspeedPitchHold.compute();
+				}
+				else if(h >= h_c + _parameters.altitude_hold_zone)
+				{
+					//In Descend Zone
+					delta_t = 0;
+					airspeedPitchHold.compute();
+				}
+				else
+				{
+					//In Altitude-Hold Zone
+					airspeedThrottleHold.compute();
+					altitudeHold.compute();
+				}
+				pitchHold.compute();
+
+
+
+
+
+
+
+
 				if (isfinite(roll_sp) && isfinite(pitch_sp)) {
 					_roll_ctrl.control_attitude(roll_sp, _att.roll);
 					_pitch_ctrl.control_attitude(pitch_sp, _att.roll, _att.pitch, airspeed);
@@ -848,7 +885,7 @@ FixedwingAttitudeControl::task_main()
 }
 
 int
-FixedwingAttitudeControl::start()
+FixedWingController::start()
 {
 	ASSERT(_control_task == -1);
 
@@ -857,7 +894,7 @@ FixedwingAttitudeControl::start()
 				       SCHED_DEFAULT,
 				       SCHED_PRIORITY_MAX - 5,
 				       2048,
-				       (main_t)&FixedwingAttitudeControl::task_main_trampoline,
+				       (main_t)&FixedWingController::task_main_trampoline,
 				       nullptr);
 
 	if (_control_task < 0) {
@@ -878,7 +915,7 @@ int fw_att_control_main(int argc, char *argv[])
 		if (att_control::g_control != nullptr)
 			errx(1, "already running");
 
-		att_control::g_control = new FixedwingAttitudeControl;
+		att_control::g_control = new FixedWingController;
 
 		if (att_control::g_control == nullptr)
 			errx(1, "alloc failed");
