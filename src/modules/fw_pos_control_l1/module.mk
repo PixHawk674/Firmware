@@ -40,7 +40,7 @@ MODULE_COMMAND	= fw_pos_control_l1
 SRCS		= fw_pos_control_l1_main.cpp \
 		  fw_pos_control_l1_params.c \
 		  landingslope.cpp \
-		  pathFollow.cpp \
+		  orbit.cpp \
 		  fw_pos_polling.cpp \
 		  waypointFollow.cpp \
 		  fw_pos_class_constructors.cpp \
