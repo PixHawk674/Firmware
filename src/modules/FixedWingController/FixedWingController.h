@@ -197,6 +197,33 @@ private:
 	}		_parameter_handles;		/**< handles for interesting parameters */
 
 
+	float _ts;
+	float _tau;
+	UAVpid::UAVpid* _roll_ctrl;
+	float _roll_ctrl_input;
+	float _roll_ctrl_output;
+	float _roll_c;
+	float _roll_actuator_pos_limit;
+	float _roll_actuator_neg_limit;
+
+	UAVpid::UAVpid* _course_ctrl;
+	float _course_ctrl_input;
+	float _course_ctrl_output;
+	float _course_c;
+	float _course_actuator_pos_limit;
+	float _course_actuator_neg_limit;
+
+	UAVpid::UAVpid* _sideslip_ctrl;
+	float _sideslip_ctrl_input;
+	float _sideslip_ctrl_output;
+	float _sideslip_c;
+	float _sideslip_actuator_pos_limit;
+	float _sideslip_actuator_neg_limit;
+
+
+
+/* These willl probably be deleted later
+ */
 	ECL_RollController				_roll_ctrl;
 	ECL_PitchController				_pitch_ctrl;
 	ECL_YawController				_yaw_ctrl;

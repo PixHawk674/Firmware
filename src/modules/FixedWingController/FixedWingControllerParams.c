@@ -90,6 +90,18 @@ PARAM_DEFINE_FLOAT(FW_PR_P, 0.05f);
 PARAM_DEFINE_FLOAT(FW_PR_I, 0.0f);
 
 /**
+ * Pitch rate derivative gain.
+ *
+ * This gain defines how much control response will result out of a steady
+ * state error. It trims any constant error.
+ *
+ * @min 0.0
+ * @max 50.0
+ * @group FW Attitude Control
+ */
+PARAM_DEFINE_FLOAT(FW_PR_I, 0.0f);
+
+/**
  * Maximum positive / up pitch rate.
  *
  * This limits the maximum pitch up angular rate the controller will output (in
@@ -369,3 +381,43 @@ PARAM_DEFINE_FLOAT(FW_MAN_R_MAX, 45.0f);
  * @group FW Attitude Control
  */
 PARAM_DEFINE_FLOAT(FW_MAN_P_MAX, 45.0f);
+
+
+
+/********  Roll Controller **********/
+/**
+ * Roll Controller P Gain
+ *
+ * Proportional Gain for Roll Controller
+ *
+ * @group FW Attitude Control
+ */
+PARAM_DEFINE_FLOAT(FW_ROLL_P,1.0f);
+
+/**
+ * Roll Controller I Gain
+ *
+ * Integral Gain for Roll Controller
+ *
+ * @group FW Attitude Control
+ */
+PARAM_DEFINE_FLOAT(FW_ROLL_I,1.0f);
+
+/**
+ * Roll Controller D Gain
+ *
+ * Derivative Gain for Roll Controller
+ *
+ * @group FW Attitude Control
+ */
+PARAM_DEFINE_FLOAT(FW_ROLL_D,1.0f);
+
+/**
+ * Roll Maximum Actuator Control
+ * 
+ * Maximum output on aileron output
+ */
+PARAM_DEFINE_FLOAT(FW+)
+
+
+
