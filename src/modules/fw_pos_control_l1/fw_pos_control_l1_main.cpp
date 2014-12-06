@@ -60,10 +60,6 @@
  */
 extern "C" __EXPORT int fw_pos_control_l1_main(int argc, char *argv[]);
 
-
-
-//static int	_control_task;
-
 static int _control_task = -1;			/**< task handle for sensor task */
 
 void FixedwingPositionControl::task_main_trampoline(int argc, char *argv[])

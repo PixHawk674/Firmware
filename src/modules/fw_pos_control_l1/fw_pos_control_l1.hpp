@@ -223,6 +223,8 @@ private:
 		float land_flare_pitch_max_deg;
 		int land_use_terrain_estimate;
 
+		float k_orbit;
+
 	}		_parameters;			/**< local copies of interesting parameters */
 
 	struct {
@@ -270,6 +272,8 @@ private:
 		param_t land_flare_pitch_min_deg;
 		param_t land_flare_pitch_max_deg;
 		param_t land_use_terrain_estimate;
+
+		param_t orbit_k_orbit;
 
 	}		_parameter_handles;		/**< handles for interesting parameters */
 
