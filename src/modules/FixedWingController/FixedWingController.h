@@ -201,6 +201,10 @@ private:
 	ECL_PitchController				_pitch_ctrl;
 	ECL_YawController				_yaw_ctrl;
 
+	UAVpid.UAVpid*		_pitchHold_ctrl;
+	UAVpid.UAVpid*		_altitudeHold_ctrl;
+	UAVpid.UAVpid*		_airspeedPitchHold_ctrl;
+	UAVpid.UAVpid*		_airspeedThrottleHold_ctrl;
 
 	/**
 	 * Update our local parameter cache.
