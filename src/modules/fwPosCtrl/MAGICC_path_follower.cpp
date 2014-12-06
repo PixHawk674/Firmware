@@ -32,7 +32,7 @@
  ****************************************************************************/
 
 /**
- * @file MAGICCPathFollower.h
+ * @file MAGICC_path_follower.h
  * Implementation of L1 position control.
  * Authors and acknowledgements in header.
  *
@@ -244,7 +244,7 @@ void MAGICCPathFollower::navigate_loiter(const math::Vector<2> &vector_A, const 
 	*
 	* @return sets _lateral_accel setpoint
 	*
-	*   - Vector_A: Possibly the next waypoint? Definitely *a* waypoint. 
+	*   - Vector_A: Current waypoint
 	*   - vector_curr_position: Current position, in x and y coordinates. 
 	*   - radius: Radius of the orbit, in meters I assume. 
 	*   - loiter_direction: +- 1, with +1 giving a ?clockwise? orbit. 
@@ -339,7 +339,6 @@ void MAGICCPathFollower::navigate_loiter(const math::Vector<2> &vector_A, const 
 		_bearing_error = eta;
 		/* bearing from current position to L1 point */
 		_nav_bearing = atan2f(-vector_A_to_airplane_unit(1) , -vector_A_to_airplane_unit(0));
-
 	} else {
 		_lateral_accel = lateral_accel_sp_circle;
 		_circle_mode = true;

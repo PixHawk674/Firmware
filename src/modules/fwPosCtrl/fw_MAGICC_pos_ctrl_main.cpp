@@ -178,12 +178,11 @@ float MAGICCfwControl::get_terrain_altitude_landing(float land_setpoint_alt, con
 /*  Starting here - I'm going to rewrite this for ECEn 674 Context. bpl */
 /*  Upon second look, rewriting the file with the ecl position controller, 
 *   which contains orbits and straight lines, may be more what I need to do. */
-bool MAGICCfwControl::control_position(const math::Vector<2> &current_position, const math::Vector<3> &ground_speed,
-		const struct position_setpoint_triplet_s &pos_sp_triplet)
+bool MAGICCfwControl::control_position(const math::Vector<2> &current_position, const math::Vector<3> &ground_speed, const struct position_setpoint_triplet_s &pos_sp_triplet)
 {
 	bool setpoint = true;
 
-	math::Vector<2> ground_speed_2d = {ground_speed(0), ground_speed(1)};
+	math::Vector<2> ground_speed_2d = {ground_speed(0), ground_speed(1)}; // Ground speed
 	calculate_gndspeed_undershoot(current_position, ground_speed_2d, pos_sp_triplet);
 
 	float eas2tas = 1.0f; // XXX calculate actual number based on current measurements
@@ -197,10 +196,10 @@ bool MAGICCfwControl::control_position(const math::Vector<2> &current_position, 
 	}
 
 	/* define altitude error */
-	float altitude_error = _pos_sp_triplet.current.alt - _global_pos.alt;
+	float altitude_error = _pos_sp_triplet.current.alt - _global_pos.alt; // h_d - h
 
 	/* no throttle limit as default */
-	float throttle_max = 1.0f;
+	float throttle_max = 1.0f; // On a scale of 0 to 1.
 
 	/* AUTONOMOUS FLIGHT */
 
@@ -222,18 +221,14 @@ bool MAGICCfwControl::control_position(const math::Vector<2> &current_position, 
 		bool was_circle_mode = _l1_control.circle_mode();
 
 		/* restore speed weight, in case changed intermittently (e.g. in landing handling) */
-		_tecs.set_speed_weight(_parameters.speed_weight);
+		_tecs.set_speed_weight(_parameters.speed_weight);  // Not needed? 
 
+/***********Get Waypoints **************************/
 		/* current waypoint (the one currently heading for) */
 		math::Vector<2> next_wp((float)pos_sp_triplet.current.lat, (float)pos_sp_triplet.current.lon);
 
 		/* current waypoint (the one currently heading for) */
 		math::Vector<2> curr_wp((float)pos_sp_triplet.current.lat, (float)pos_sp_triplet.current.lon);
-
-		/* Initialize attitude controller integrator reset flags to 0 */
-		_att_sp.roll_reset_integral = false;
-		_att_sp.pitch_reset_integral = false;
-		_att_sp.yaw_reset_integral = false;
 
 		/* previous waypoint */
 		math::Vector<2> prev_wp;
@@ -249,11 +244,18 @@ bool MAGICCfwControl::control_position(const math::Vector<2> &current_position, 
 			 */
 			prev_wp(0) = (float)pos_sp_triplet.current.lat;
 			prev_wp(1) = (float)pos_sp_triplet.current.lon;
-
 		}
+/*****************************************************/
+
+		/* Initialize attitude controller integrator reset flags to 0 */
+		_att_sp.roll_reset_integral = false;
+		_att_sp.pitch_reset_integral = false;
+		_att_sp.yaw_reset_integral = false;
+		
 
 		if (pos_sp_triplet.current.type == SETPOINT_TYPE_POSITION) {
 			/* waypoint is a plain navigation waypoint */
+/****************** Go to next waypoint **************/
 			_l1_control.navigate_waypoints(prev_wp, curr_wp, current_position, ground_speed_2d);
 			_att_sp.roll_body = _l1_control.nav_roll();
 			_att_sp.yaw_body = _l1_control.nav_bearing();
@@ -264,7 +266,7 @@ bool MAGICCfwControl::control_position(const math::Vector<2> &current_position, 
 						false, math::radians(_parameters.pitch_limit_min), _global_pos.alt, ground_speed);
 
 		} else if (pos_sp_triplet.current.type == SETPOINT_TYPE_LOITER) {
-
+/****************** Orbit **************/
 			/* waypoint is a loiter waypoint */
 			_l1_control.navigate_loiter(curr_wp, current_position, pos_sp_triplet.current.loiter_radius,
 						  pos_sp_triplet.current.loiter_direction, ground_speed_2d);
