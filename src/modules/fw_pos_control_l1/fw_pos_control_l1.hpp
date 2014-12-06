@@ -224,6 +224,7 @@ private:
 		int land_use_terrain_estimate;
 
 		float k_orbit;
+		int use_magicc_orbit;
 
 	}		_parameters;			/**< local copies of interesting parameters */
 
@@ -274,6 +275,7 @@ private:
 		param_t land_use_terrain_estimate;
 
 		param_t orbit_k_orbit;
+		param_t magicc_orbit;
 
 	}		_parameter_handles;		/**< handles for interesting parameters */
 

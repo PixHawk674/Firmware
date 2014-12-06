@@ -447,3 +447,14 @@ PARAM_DEFINE_FLOAT(FW_FLARE_PMAX, 15.0f);
  */
 
  PARAM_DEFINE_FLOAT(MAGICC_K_ORBIT, 0.2f);
+
+ /**
+ *
+ * USE_MAGICC_ORBIT
+ * This parameter defines whether (when 0) the stock ECL orbit should be used,
+ * or (when 1) the MAGICC orbit function defined in pathFollow (I think I'll rename
+ * it to orbit.cpp) should be used. Default value = 1.
+ *
+ */
+
+ PARAM_DEFINE_INT32(USE_MAGICC_ORBIT, 1);
