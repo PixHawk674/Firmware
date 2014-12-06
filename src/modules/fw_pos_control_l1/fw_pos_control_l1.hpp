@@ -225,6 +225,7 @@ private:
 
 		float k_orbit;
 		int use_magicc_orbit;
+		int use_magicc_straightline;
 
 	}		_parameters;			/**< local copies of interesting parameters */
 
@@ -276,6 +277,7 @@ private:
 
 		param_t orbit_k_orbit;
 		param_t magicc_orbit;
+		param_t magicc_straightline;
 
 	}		_parameter_handles;		/**< handles for interesting parameters */
 

@@ -113,6 +113,7 @@ FixedwingPositionControl::FixedwingPositionControl():
 
 	_parameter_handles.orbit_k_orbit =			param_find("MAGICC_K_ORBIT");
 	_parameter_handles.magicc_orbit = 			param_find("USE_MAGICC_ORBIT");
+	_parameter_handles.magicc_straightline = 	param_find("USE_MAGICC_STRAIGHTLINE");
 
 	/* fetch initial parameter values */
 	parameters_update();
@@ -201,6 +202,7 @@ int FixedwingPositionControl::parameters_update()
 
 	param_get(_parameter_handles.orbit_k_orbit, &(_parameters.k_orbit));
 	param_get(_parameter_handles.magicc_orbit, &(_parameters.use_magicc_orbit));
+	param_get(_parameter_handles.magicc_straightline, &(_parameters.use_magicc_straightline));
 
 	_l1_control.set_l1_damping(_parameters.l1_damping);
 	_l1_control.set_l1_period(_parameters.l1_period);
