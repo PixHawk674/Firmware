@@ -7,31 +7,31 @@ namespace l1_control
 	extern FixedwingPositionControl	*g_control = nullptr;
 }
 
-FixedwingPositionControl::FixedwingPositionControl(){
+FixedwingPositionControl::FixedwingPositionControl():
 
-	_mavlink_fd = -1;//(-1),
-	_task_should_exit = false;//(false),
-	_task_running = false;//(false),
-	_control_task = 
+	_mavlink_fd(-1),
+	_task_should_exit(false),
+	_task_running(false),
+//	_control_task(),
 
 /* subscriptions */
-	_global_pos_sub = -1;//(-1),
-	_pos_sp_triplet_sub = -1;//(-1),
-	_att_sub = -1;//(-1),
-	_airspeed_sub = -1;//(-1),
-	_control_mode_sub = -1;//(-1),
-	_vehicle_status_sub = -1;//(-1),
-	_params_sub = -1;//(-1),
-	_manual_control_sub = -1;//(-1),
-	_sensor_combined_sub = -1;//(-1),
+	_global_pos_sub(-1),
+	_pos_sp_triplet_sub(-1),
+	_att_sub(-1),
+	_airspeed_sub(-1),
+	_control_mode_sub(-1),
+	_vehicle_status_sub(-1),
+	_params_sub(-1),
+	_manual_control_sub(-1),
+	_sensor_combined_sub(-1),
 
 /* publications */
-	_attitude_sp_pub = -1;//(-1),
-	_tecs_status_pub = -1;//(-1),
-	_nav_capabilities_pub = -1;//(-1),
+	_attitude_sp_pub(-1),
+	_tecs_status_pub(-1),
+	_nav_capabilities_pub(-1),
 
 /* states */
-	/*_att(),
+	_att(),
 	_att_sp(),
 	_nav_capabilities(),
 	_manual(),
@@ -40,31 +40,31 @@ FixedwingPositionControl::FixedwingPositionControl(){
 	_vehicle_status(),
 	_global_pos(),
 	_pos_sp_triplet(),
-	_sensor_combined(),*/
+	_sensor_combined(),
 
 /* performance counters */
-	_loop_perf = perf_alloc(PC_ELAPSED, "fw l1 control");//(perf_alloc(PC_ELAPSED, "fw l1 control")),
+	_loop_perf(perf_alloc(PC_ELAPSED, "fw l1 control")),
 
-	land_noreturn_horizontal = false;//(false),
-	land_noreturn_vertical = false;//(false),
-	land_stayonground = false;//(false),
-	land_motor_lim = false;//(false),
-	land_onslope = false;//(false),
-	land_useterrain = false;//(false),
-	launch_detection_state = LAUNCHDETECTION_RES_NONE;//(LAUNCHDETECTION_RES_NONE),
-	last_manual = false;//(false),
-	//landingslope(),
-	flare_curve_alt_rel_last = 0.0f;//(0.0f),
-	target_bearing = 0.0f;//(0.0f),
-	//launchDetector(),
-	_airspeed_error = 0.0f;//(0.0f),
-	_airspeed_valid = false;//(false),
-	_airspeed_last_valid = 0;//(0),
-	_groundspeed_undershoot = 0.0f;//(0.0f),
-	_global_pos_valid = false;//(false),
-	//_l1_control(),
-	//_mTecs(),
-	_was_pos_control_mode = false;//(false)
+	land_noreturn_horizontal(false),
+	land_noreturn_vertical(false),
+	land_stayonground(false),
+	land_motor_lim(false),
+	land_onslope(false),
+	land_useterrain(false),
+	launch_detection_state(LAUNCHDETECTION_RES_NONE),
+	last_manual(false),
+	landingslope(),
+	flare_curve_alt_rel_last(0.0f),
+	target_bearing(0.0f),
+	launchDetector(),
+	_airspeed_error(0.0f),
+	_airspeed_valid(false),
+	_airspeed_last_valid(0),
+	_groundspeed_undershoot(0.0f),
+	_global_pos_valid(false),
+	_l1_control(),
+	_mTecs(),
+	_was_pos_control_mode(false)
 {
 	_nav_capabilities.turn_distance = 0.0f;
 
@@ -115,7 +115,6 @@ FixedwingPositionControl::FixedwingPositionControl(){
 	parameters_update();
 }
 
-}
 
 FixedwingPositionControl::~FixedwingPositionControl()
 {
