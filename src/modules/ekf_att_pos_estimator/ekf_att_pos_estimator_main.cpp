@@ -1134,8 +1134,8 @@ FixedwingEstimator::task_main()
 					uu674[9]  = _gps.lon * 1e7 * 6371;			// east pos on earth in meters
 					uu674[10] = _gps.alt * 1e3;					// altitude in meters
 					uu674[11] = _gps.vel_m_s;					// ground speed in m/s
-					uu674[12] = 0.0;
-				//	uu674[12] = (double)((2*PI + (double)_gps.cog_rad) % (2*PI));	// course angle in radians
+					uu674[12] = fmod((2*M_PI_F + _gps.cog_rad) , 2*M_PI_F);	// course angle in radians
+					// Needed to use fmod instead of % to do a float mod here. 
 
 					// warnx("GPS updated: status: %d, vel: %8.4f %8.4f %8.4f", (int)GPSstatus, velNED[0], velNED[1], velNED[2]);
 
