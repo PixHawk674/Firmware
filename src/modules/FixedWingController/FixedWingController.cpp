@@ -725,10 +725,10 @@ FixedWingController::task_main()
 				}
 				_pitchHold_ctrl->compute();
 
-
-
-
-
+				_actuators.control[0] = delta_e;
+				_actuators.control[1] = delta_a;
+				_actuators.control[2] = delta_r;
+				_actuators.control[3] = delta_t;
 
 
 
