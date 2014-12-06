@@ -131,7 +131,7 @@ MODULES		+= lib/launchdetection
 #
 # OBC challenge
 #
-MODULES		+= modules/bottle_drop
+#MODULES		+= modules/bottle_drop
 
 #
 # Demo apps

@@ -76,6 +76,8 @@
 #include <uORB/topics/actuator_armed.h>
 #include <uORB/topics/home_position.h>
 #include <uORB/topics/wind_estimate.h>
+#include <uORB/topics/x_hat.h>
+
 #include <systemlib/param/param.h>
 #include <systemlib/err.h>
 #include <geo/geo.h>
@@ -85,8 +87,9 @@
 #include <mavlink/mavlink_log.h>
 
 #include "estimator_23states.h"
+#include "StateEstimator.h"
 
-
+#define PI 3.141592654
 
 /**
  * estimator app start / stop handling function
@@ -169,6 +172,12 @@ public:
 	int		set_debuglevel(unsigned debug) { _debug = debug; return 0; }
 
 private:
+    
+    double*    	xhat674; 	            /**< array of states -- PIXHAWK 674 */
+    double* 	uu674;					/** array of inputs to EKF -- PIXHAWK 674 */
+	double*		P674;					/** array of parameters to pass into EKF -- PIXHAWK 674 */
+    x_hat_s		xhatObj;				/**< placeholder for publishing -- PIXHAWK 674 */
+    
 
 	bool		_task_should_exit;		/**< if true, sensor task should exit */
 	bool		_task_running;			/**< if true, task is running in its mainloop */
@@ -449,6 +458,17 @@ FixedwingEstimator::FixedwingEstimator() :
 	_parameter_handles.eas_noise = param_find("PE_EAS_NOISE");
 	_parameter_handles.pos_stddev_threshold = param_find("PE_POSDEV_INIT");
 
+	// #### PIXHAWK 674 CODE ####
+	xhat674 = new double[15]; 	// default is all zero
+	uu674	= new double[13];
+	P674	= new double[3];
+	
+	// Setting default Ts values...HACK! But we need something there...
+	P674[0] = 0.01;		// update rate
+	P674[1] = 1;		// GPS update rate
+	P674[2] = 1.2682;	// density of air
+
+
 	/* fetch initial parameter values */
 	parameters_update();
 
@@ -565,6 +585,56 @@ FixedwingEstimator::parameters_update()
         	_ekf->accelProcessNoise = _parameters.acc_pnoise;
 		_ekf->airspeedMeasurementSigma = _parameters.eas_noise;
 		_ekf->rngFinderPitch = 0.0f; // XXX base on SENS_BOARD_Y_OFF
+
+		// #### PIXHAWK 674 CODE ####
+		double* SP1 = new double[2*2];
+		double* SQ1 = new double[2*2];
+		double* SR1 = new double[3*3];
+
+		SP1[0] = 2 * PI / 180.0;
+		SP1[3] = 2 * PI / 180.0;
+
+		SQ1[0] = 0.00001;
+		SQ2[3] = 0.00001;
+
+		SR1[0] = _parameters.acc_pnoise * _parameters.acc_pnoise;
+		SR1[4] = _parameters.acc_pnoise * _parameters.acc_pnoise;
+		SR1[8] = _parameters.acc_pnoise * _parameters.acc_pnoise;
+
+		StateEstimator.P1 = SP1;
+		StateEstimator.Q1 = SQ1;
+		StateEstimator.R1 = SR1;
+
+		SP2 = new double[7*7];
+		SQ2 = new double[7*7];
+		SR2 = new double[6*6];
+
+		SP2[0]  = 3 * 3;
+		SP2[8]  = 3 * 3;
+		SP2[16] = 0.1 * 0.1;
+		SP2[24] = 0.1 * 0.1;
+		SP2[32] = 0.5 * 0.5;
+		SP2[40] = 0.5 * 0.5;
+		SP2[48] = 0.1 * 0.1;
+
+		SQ2[0]  = 0.1;
+		SQ2[8]  = 0.1;
+		SQ2[16] = 0.1;
+		SQ2[24] = 0.1;
+		SQ2[32] = 0.1;
+		SQ2[40] = 0.1;
+		SQ2[48] = 0.1;
+
+		SR2[0]  = _parameters.posne_noise * _parameters.posne_noise;
+		SR2[7]  = _parameters.posne_noise * _parameters.posne_noise;
+		SR2[14] = 1;
+		SR2[21] = 1;
+		SR2[28] = 1;
+		SR2[35] = 1;
+
+		StateEstimator.P2 = SP2;
+		StateEstimator.Q2 = SQ2;
+		StateEstimator.R2 = SR2;			
 	}
 
 	return OK;
@@ -956,6 +1026,11 @@ FixedwingEstimator::task_main()
 				_ekf->angRate.y = _sensor_combined.gyro_rad_s[1];
 				_ekf->angRate.z = _sensor_combined.gyro_rad_s[2];
 
+				// #### PIXHAWK 674 CODE ####
+				uu674[0]  = _sensor_combined.gyro_rad_s[0];
+				uu674[1] = _sensor_combined.gyro_rad_s[1];
+				uu674[2] = _sensor_combined.gyro_rad_s[2];
+
 				if (!_gyro_valid) {
 					lastAngRate = _ekf->angRate;
 				}
@@ -968,6 +1043,12 @@ FixedwingEstimator::task_main()
 				_ekf->accel.x = _sensor_combined.accelerometer_m_s2[0];
 				_ekf->accel.y = _sensor_combined.accelerometer_m_s2[1];
 				_ekf->accel.z = _sensor_combined.accelerometer_m_s2[2];
+
+				// #### PIXHAWK 674 CODE ####
+				uu674[3] = _sensor_combined.accelerometer_m_s2[0];
+				uu674[4] = _sensor_combined.accelerometer_m_s2[1];
+				uu674[5] = _sensor_combined.accelerometer_m_s2[2];
+
 
 				if (!_accel_valid) {
 					lastAccel = _ekf->accel;
@@ -1003,6 +1084,10 @@ FixedwingEstimator::task_main()
 				perf_count(_perf_airspeed);
 
 				_ekf->VtasMeas = _airspeed.true_airspeed_m_s;
+
+				// #### PIXHAWK 674 CODE ####
+				uu674[7] = _airspeed.true_airspeed_m_s;
+
 				newAdsData = true;
 
 			} else {
@@ -1045,6 +1130,13 @@ FixedwingEstimator::task_main()
 					_ekf->velNED[0] = _gps.vel_n_m_s;
 					_ekf->velNED[1] = _gps.vel_e_m_s;
 					_ekf->velNED[2] = _gps.vel_d_m_s;
+
+					// #### PIXHAWK 674 CODE ####
+					uu674[8]  = _gps.lat * 1e7 * 6371;			// north pos on earth in meters
+					uu674[9]  = _gps.lon * 1e7 * 6371;			// east pos on earth in meters
+					uu674[10] = _gps.alt * 1e3;					// altitude in meters
+					uu674[11] = _gps.vel_m_s;					// ground speed in m/s
+					uu674[12] = (2*PI + _gps.cog_rad) % (2*PI) 	// course angle in radians
 
 					// warnx("GPS updated: status: %d, vel: %8.4f %8.4f %8.4f", (int)GPSstatus, velNED[0], velNED[1], velNED[2]);
 
@@ -1094,6 +1186,9 @@ FixedwingEstimator::task_main()
 					_baro_init = true;
 					warnx("ALT REF INIT");
 				}
+
+				// #### PIXHAWK 674 CODE ####
+				uu674[6] = _baro.altitude;
 
 				perf_count(_perf_baro);
 
@@ -1374,6 +1469,9 @@ FixedwingEstimator::task_main()
 						_ekf->GroundEKF();
 					}
 
+                    // #### PIXHAWK 674 CODE ####
+                    StateEstimator::Estimate(xhat674, uu674, P674);
+                    
 
 					// Output results
 					math::Quaternion q(_ekf->states[0], _ekf->states[1], _ekf->states[2], _ekf->states[3]);

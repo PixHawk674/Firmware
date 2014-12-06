@@ -111,6 +111,9 @@ FixedwingPositionControl::FixedwingPositionControl():
 	_parameter_handles.heightrate_ff =			param_find("FW_T_HRATE_FF");
 	_parameter_handles.speedrate_p =			param_find("FW_T_SRATE_P");
 
+	_parameter_handles.orbit_k_orbit =			param_find("MAGICC_K_ORBIT");
+	_parameter_handles.magicc_orbit = 			param_find("USE_MAGICC_ORBIT");
+
 	/* fetch initial parameter values */
 	parameters_update();
 }
@@ -195,6 +198,9 @@ int FixedwingPositionControl::parameters_update()
 	param_get(_parameter_handles.land_flare_pitch_min_deg, &(_parameters.land_flare_pitch_min_deg));
 	param_get(_parameter_handles.land_flare_pitch_max_deg, &(_parameters.land_flare_pitch_max_deg));
 	param_get(_parameter_handles.land_use_terrain_estimate, &(_parameters.land_use_terrain_estimate));
+
+	param_get(_parameter_handles.orbit_k_orbit, &(_parameters.k_orbit));
+	param_get(_parameter_handles.magicc_orbit, &(_parameters.use_magicc_orbit));
 
 	_l1_control.set_l1_damping(_parameters.l1_damping);
 	_l1_control.set_l1_period(_parameters.l1_period);

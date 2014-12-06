@@ -60,10 +60,6 @@
  */
 extern "C" __EXPORT int fw_pos_control_l1_main(int argc, char *argv[]);
 
-
-
-//static int	_control_task;
-
 static int _control_task = -1;			/**< task handle for sensor task */
 
 void FixedwingPositionControl::task_main_trampoline(int argc, char *argv[])
@@ -258,7 +254,7 @@ bool FixedwingPositionControl::control_position(const math::Vector<2> &current_p
 
 		if (pos_sp_triplet.current.type == SETPOINT_TYPE_POSITION) {
 			/* waypoint is a plain navigation waypoint */
-			_l1_control.navigate_waypoints(prev_wp, curr_wp, current_position, ground_speed_2d);
+				_l1_control.navigate_waypoints(prev_wp, curr_wp, current_position, ground_speed_2d);
 			_att_sp.roll_body = _l1_control.nav_roll();
 			_att_sp.yaw_body = _l1_control.nav_bearing();
 
@@ -270,8 +266,13 @@ bool FixedwingPositionControl::control_position(const math::Vector<2> &current_p
 		} else if (pos_sp_triplet.current.type == SETPOINT_TYPE_LOITER) {
 
 			/* waypoint is a loiter waypoint */
+			if (_parameters.use_magicc_orbit == 0){
 			_l1_control.navigate_loiter(curr_wp, current_position, pos_sp_triplet.current.loiter_radius,
 						  pos_sp_triplet.current.loiter_direction, ground_speed_2d);
+			}else{
+				FixedwingPositionControl::navigate_loiter(curr_wp, current_position, pos_sp_triplet.current.loiter_radius,
+						  pos_sp_triplet.current.loiter_direction, ground_speed_2d);
+			}
 			_att_sp.roll_body = _l1_control.nav_roll();
 			_att_sp.yaw_body = _l1_control.nav_bearing();
 

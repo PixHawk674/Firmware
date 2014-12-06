@@ -10,14 +10,13 @@ void set_ECL_vars_custom(float lateral_accel, float L1_distance, bool circle_mod
 
 void FixedwingPositionControl::navigate_loiter(const math::Vector<2> &curr_wp, const math::Vector<2> &current_position, float rhoOrbit, int8_t lambda,
 				       const math::Vector<2> &ground_speed_vector){
-
 // lambda: +1 for clockwise, -1 for counterclockwise. 
 
 	//float Va_d = ; // Get the desired velocity and pass it in to the function, for use in commandedRadians. 
 
 	/*** K_ORBIT  */
 
-	float kOrbit = 0.2; // CHANGE THIS TO A PARAM
+	float kOrbit = _parameters.k_orbit; // Parameter named MAGICC_K_ORBIT
 
 	float cOrbitN = curr_wp(0);
 	float cOrbitE = curr_wp(1);
