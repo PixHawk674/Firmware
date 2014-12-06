@@ -231,6 +231,25 @@ public:
 		_roll_lim_rad = roll_lim_rad;
 	}
 
+	void set_ECL_vars_custom(float MAGICC_lateral_accel, float MAGICC_L1_distance, bool MAGICC_circle_mode, float MAGICC_nav_bearing, 
+			float MAGICC_bearing_error, float MAGICC_crosstrack_error, float MAGICC_target_bearing){
+		_lateral_accel = MAGICC_lateral_accel;
+		_L1_damping = MAGICC_L1_distance;
+		_circle_mode = MAGICC_circle_mode;
+		_nav_bearing = MAGICC_nav_bearing;
+		_bearing_error = MAGICC_bearing_error;
+		_crosstrack_error = MAGICC_crosstrack_error;
+		_target_bearing = MAGICC_target_bearing;
+	}
+
+	float get_L1_ratio(){
+		return _L1_ratio;
+	}
+
+	float get_K_L1(){
+		return _K_L1;
+	}
+
 private:
 
 	float _lateral_accel;		///< Lateral acceleration setpoint in m/s^2
