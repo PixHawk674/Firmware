@@ -640,8 +640,7 @@ FixedwingEstimator::parameters_update()
 	return OK;
 }
 
-void
-FixedwingEstimator::vehicle_status_poll()
+void FixedwingEstimator::vehicle_status_poll()
 {
 	bool vstatus_updated;
 
@@ -654,8 +653,7 @@ FixedwingEstimator::vehicle_status_poll()
 	}
 }
 
-int
-FixedwingEstimator::check_filter_state()
+int FixedwingEstimator::check_filter_state()
 {
 	/*
 	 *    CHECK IF THE INPUT DATA IS SANE

@@ -9,6 +9,8 @@
 #ifndef _StateEstimator_h
 #define _StateEstimator_h
 
+#define GRAVITY 9.81
+
 class StateEstimator
 {
 public:
