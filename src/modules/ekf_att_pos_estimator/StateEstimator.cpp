@@ -9,6 +9,28 @@
 #include <StateEstimator.h>
 #include <cmath>
 
+    double _pHat = 0;
+    double _qHat = 0;
+    double _rHat = 0;
+    //static double _staticPresHat = 0;
+    //static double _diffPresHat = 0;
+    double _hHat = 0;
+    double _Vahat = 0;
+    double _phiHat = 0;
+    double _thetaHat = 0;
+    double _pnHat = 0;
+    double _peHat = 0;
+    double _chiHat = 0;
+    double _VgHat = 0;
+    double _psiHat = 0;
+    double _wnHat = 0;
+    double _weHat = 0;
+    double _alphaHat = 0;
+    double _betaHat = 0;
+    double _bxHat = 0;
+    double _byHat = 0;
+    double _bzHat = 0;
+
 void StateEstimator::Estimate(double* xhat, double* uu, double* P)
 {
     double yGyroX      = uu[0];
