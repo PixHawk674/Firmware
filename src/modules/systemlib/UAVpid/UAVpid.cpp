@@ -2,9 +2,9 @@
 
 namespace UAVpid_UAV
 {
-UAVpid::UAVpid(double* input, double* output, double* setpoint, 
-	 double kp, double ki, double kd, double upper_limit, 
-	 double lower_limit, double ts, double tau)
+UAVpid::UAVpid(float* input, float* output, float* setpoint, 
+	 float kp, float ki, float kd, float upper_limit, 
+	 float lower_limit, float ts, float tau)
 {
 	_output   = output;
 	_input    = input;
@@ -16,11 +16,17 @@ UAVpid::UAVpid(double* input, double* output, double* setpoint,
 	setOutputLimits(upper_limit, lower_limit);
 	setGains(kp,ki,kd);
 	reset();
-
-
+	bool _ready = 1;
 }
 
-bool UAVpid::setOutputLimits(double upper_limit, double lower_limit)
+
+UAVpid::UAVpid()
+{
+	bool _ready = 0;
+}
+
+
+bool UAVpid::setOutputLimits(float upper_limit, float lower_limit)
 {
 	_upperLimit = upper_limit;
 	_lowerLimit = lower_limit;
@@ -45,36 +51,39 @@ bool UAVpid::reset()
 
 bool UAVpid::compute()
 {
-	double t = hrt_absolute_time();
-	if(_t_dl - t  < _ts)
+	if(_ready)
 	{
-		// do nothing
-		return 0;
-	}
-	else
-	{
-		double error = *_setpoint - *_input;
-		_integrator += (_ts/2)*(error+_prev_dl);
-		_differentiator = (2*_tau-_ts)/(2*_tau+_ts)*_differentiator+2/(2*_tau+_ts)*(error-_error_dl);
-		_error_dl = _error;
-
-		u = sat(kp*error+ki*_integrator+kd*_differentiator, _upperLimit, _lowerLimit);
-		// integrator anti-windup scheme
-		if(_ki!=0)
+		float t = hrt_absolute_time();
+		if(_t_dl - t  < _ts)
 		{
-			u_unsat = kp*error+ki*_integrator+kd*_differentiator;
-			if(u!=u_unsat)
-			{
-				_integrator = _integrator + _ts/_ki*(u-u_unsat);
-			}
+			// do nothing
+			return 0;
 		}
-		*_output = u;
-		_t_dl = hrt_absolute_time();
-		return 1;
-	}	
+		else
+		{
+			float error = *_setpoint - *_input;
+			_integrator += (_ts/2)*(error+_prev_dl);
+			_differentiator = (2*_tau-_ts)/(2*_tau+_ts)*_differentiator+2/(2*_tau+_ts)*(error-_error_dl);
+			_error_dl = _error;
+
+			u = sat(kp*error+ki*_integrator+kd*_differentiator, _upperLimit, _lowerLimit);
+			// integrator anti-windup scheme
+			if(_ki!=0)
+			{
+				u_unsat = kp*error+ki*_integrator+kd*_differentiator;
+				if(u!=u_unsat)
+				{
+					_integrator = _integrator + _ts/_ki*(u-u_unsat);
+				}
+			}
+			*_output = u;
+			_t_dl = hrt_absolute_time();
+			return 1;
+		}	
+	}
 }
 
-double UAVpid::sat(double input, double upper_limit, double lower_limit)
+float UAVpid::sat(float input, float upper_limit, float lower_limit)
 {
 	if(u>upper_limit)
 	{
@@ -87,7 +96,7 @@ double UAVpid::sat(double input, double upper_limit, double lower_limit)
 	return u;
 }
 
-double UAVpid::getKp(){return _kp;}
-double UAVpid::getKi(){return _ki;}
-double UAVpid::getKd(){return _kd;}
+float UAVpid::getKp(){return _kp;}
+float UAVpid::getKi(){return _ki;}
+float UAVpid::getKd(){return _kd;}
 } // end namespace
