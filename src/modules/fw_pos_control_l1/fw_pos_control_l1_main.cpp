@@ -51,10 +51,7 @@
  * @author Thomas Gubler <thomasgubler@gmail.com>
  */
 
-
-
 #include "fw_pos_control_l1.hpp"
-
 
 /**
  * L1 control app start / stop handling function
@@ -63,8 +60,11 @@
  */
 extern "C" __EXPORT int fw_pos_control_l1_main(int argc, char *argv[]);
 
-extern int	_control_task;
 
+
+//static int	_control_task;
+
+static int _control_task = -1;			/**< task handle for sensor task */
 
 void FixedwingPositionControl::task_main_trampoline(int argc, char *argv[])
 {
