@@ -331,6 +331,50 @@ FixedwingAttitudeControl::vehicle_status_poll()
 }
 
 void
+FixedwingAttitudeControl::x_command_poll()
+{
+	//Poll the attitude setpoint (roll, pitch, yaw)
+	vehicle_setpoint_poll();
+
+	//Poll the current waypoint information to get altitude and airspeed commands
+	bool pos_triplet_updated;
+	orb_check(_pos_sp_triplet_sub, &pos_triplet_updated);
+
+	if (vehicle_status_updated) {
+		orb_copy(ORB_ID(position_setpoint_triplet), _pos_sp_triplet_sub, &_pos_sp_triplet);
+	}
+
+	_x_command.pitch 	= _att_sp.pitch_body;
+	_x_command.roll 	= _att_sp.roll_body;
+	_x_command.yaw 		= _att_sp.yaw_body;
+
+
+	float u, v, w;
+	u = _pos_sp_triplet.current.vx;
+	v = _pos_sp_triplet.current.vy;
+	w = _pos_sp_triplet.current.vz;
+	_x_command.Va 		= math.sqrt(u*u + v*v + w*w);
+
+	_x_command.pn 		= _pos_sp_triplet.current.x;
+	_x_command.pe 		= _pos_sp_triplet.current.y;
+	_x_command.pd 		= _pos_sp_triplet.current.z;
+
+	//_x_command.altitude 	= _pos_sp_triplet.current.alt;
+}
+
+void
+FixedwingAttitudeControl::x_hat_poll()
+{
+	bool x_hat_updated;
+	orb_check(_x_hat_sub, &x_hat_updated);
+
+	if(x_hat_updated)
+	{
+		orb_copy(ORB_ID(x_hat), _x_hat_sub, &_x_hat);
+	}
+}
+
+void
 FixedwingAttitudeControl::task_main_trampoline(int argc, char *argv[])
 {
 	att_control::g_control->task_main();
@@ -356,6 +400,7 @@ FixedwingAttitudeControl::task_main()
 	_manual_sub = orb_subscribe(ORB_ID(manual_control_setpoint));
 	_global_pos_sub = orb_subscribe(ORB_ID(vehicle_global_position));
 	_vehicle_status_sub = orb_subscribe(ORB_ID(vehicle_status));
+	_x_hat_sub = orb_subscribe(ORB_ID(x_hat));
 
 	/* rate limit vehicle status updates to 5Hz */
 	orb_set_interval(_vcontrol_mode_sub, 200);
@@ -371,6 +416,8 @@ FixedwingAttitudeControl::task_main()
 	vehicle_control_mode_poll();
 	vehicle_manual_poll();
 	vehicle_status_poll();
+	x_command_poll();
+	x_hat_poll();
 
 	/* wakeup source(s) */
 	struct pollfd fds[2];
@@ -504,6 +551,9 @@ FixedwingAttitudeControl::task_main()
 			global_pos_poll();
 
 			vehicle_status_poll();
+
+			x_command_poll();
+			x_hat_poll();
 
 			/* lock integrator until control is started */
 			bool lock_integrator;

@@ -94,19 +94,19 @@ private:
 	orb_advert_t	_actuators_0_pub;		/**< actuator control group 0 setpoint */
 	orb_advert_t	_actuators_1_pub;		/**< actuator control group 1 setpoint (Airframe) */
 
-	struct vehicle_attitude_s			_att;			/**< vehicle attitude */
-	struct accel_report				_accel;			/**< body frame accelerations */
+	struct vehicle_attitude_s				_att;			/**< vehicle attitude */
+	struct accel_report						_accel;			/**< body frame accelerations */
 	struct vehicle_attitude_setpoint_s		_att_sp;		/**< vehicle attitude setpoint */
 	struct manual_control_setpoint_s		_manual;		/**< r/c channel data */
-	struct airspeed_s				_airspeed;		/**< airspeed */
+	struct airspeed_s						_airspeed;		/**< airspeed */
 	struct vehicle_control_mode_s			_vcontrol_mode;		/**< vehicle control mode */
-	struct actuator_controls_s			_actuators;		/**< actuator control inputs */
-	struct actuator_controls_s			_actuators_airframe;	/**< actuator control inputs */
+	struct actuator_controls_s				_actuators;		/**< actuator control inputs */
+	struct actuator_controls_s				_actuators_airframe;	/**< actuator control inputs */
 	struct vehicle_global_position_s		_global_pos;		/**< global position */
-	struct vehicle_status_s				_vehicle_status;	/**< vehicle status */
+	struct vehicle_status_s					_vehicle_status;	/**< vehicle status */
 	struct position_setpoint_triplet_s		_pos_sp_triplet;	/**< waypoints, to be replaced by something more elegant later */
-	struct x_command_s				_x_command;		/**< commands structure */
-	struct x_hat_s					_x_hat;			/**< estimates */
+	struct x_command_s						_x_command;		/**< commands structure */
+	struct x_hat_s							_x_hat;			/**< estimates */
 	
 
 	perf_counter_t	_loop_perf;			/**< loop performance counter */
