@@ -4,39 +4,40 @@ namespace UAVpid
 class UAVpid
 {
 public:
-	UAVpid(double* input, double* output, double* setpoint, 
-	       double kp, double ki, double kd, double ts, 
-	       double tau, double upper_limit, double lower_limit);
+	UAVpid(float* input, float* output, float* setpoint, 
+	       float kp, float ki, float kd, float ts, 
+	       float tau, float upper_limit, float lower_limit);
 
-	bool setOutputLimits(double upper_limit, double lower_limit);
+	bool setOutputLimits(float upper_limit, float lower_limit);
 
 	bool setGains(kp,ki,kd);
 	bool reset();
 	bool compute();
-	double getKp();
-	double getKi();
-	double getKd();
+	float getKp();
+	float getKi();
+	float getKd();
 
 private:
-	double sat(double input, double upper_limit, double lower_limit);
+	float sat(float input, float upper_limit, float lower_limit);
+	bool _ready;
 
-	double* _output;
-	double* _input;
-	double* _setpoint;
-	double  _tau;
-	double  _ts;
-	double  _t_dl;
+	float* _output;
+	float* _input;
+	float* _setpoint;
+	float  _tau;
+	float  _ts;
+	float  _t_dl;
 	
-	double  _upperLimit;
-	double  _lowerLimit;
+	float  _upperLimit;
+	float  _lowerLimit;
 
-	double  _kp;
-	double 	_ki;
-	double	_kp;
+	float  _kp;
+	float 	_ki;
+	float	_kp;
 
-	double 	_integrator;
-	double	_differentiator;
-	double	_error_dl;
+	float 	_integrator;
+	float	_differentiator;
+	float	_error_dl;
 
 };
 
