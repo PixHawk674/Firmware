@@ -63,7 +63,7 @@ struct x_command_s {
 
 	float pn;				/**< body position in NED */
 	float pe;				/**< body position in NED */
-	float pd;				/**< body position in NED */
+	float h;				/**< body position in NED */
 
 
 };
