@@ -54,9 +54,9 @@
 struct x_command_s {
 	uint64_t timestamp;		/**< in microseconds since system start, is set whenever the writing thread stores new data */
 
-	float roll;				/**< body angle in NED frame		*/
-	float pitch;				/**< body angle in NED frame		*/
-	float yaw;				/**< body angle in NED frame		*/
+	float phi;				/**< body angle in NED frame		*/
+	float theta;				/**< body angle in NED frame		*/
+	float psi;				/**< body angle in NED frame		*/
 
 	float Va;				/**< Thrust in Newton the power system should generate */
 	float chi;				/**< heading angle */

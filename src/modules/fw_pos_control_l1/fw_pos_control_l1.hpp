@@ -371,6 +371,9 @@ private:
 	void navigate_loiter(const math::Vector<2> &curr_wp, const math::Vector<2> &current_position, float rhoOrbit, int8_t lambda,
 				       const math::Vector<2> &ground_speed_vector);
 
+	void navigate_waypoints(const math::Vector<2> &prev_wp, const math::Vector<2> &curr_wp, const math::Vector<2> &current_position,
+				       const math::Vector<2> &ground_speed_vector);
+
 };
 
 namespace l1_control

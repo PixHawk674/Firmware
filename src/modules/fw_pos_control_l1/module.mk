@@ -42,6 +42,7 @@ SRCS		= fw_pos_control_l1_main.cpp \
 		  landingslope.cpp \
 		  pathFollow.cpp \
 		  fw_pos_polling.cpp \
+		  waypointFollow.cpp \
 		  fw_pos_class_constructors.cpp \
 		  ../systemlib/mtecs/mTecs.cpp \
 		  ../systemlib/mtecs/limitoverride.cpp \

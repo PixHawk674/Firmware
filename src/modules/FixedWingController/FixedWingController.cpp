@@ -438,9 +438,6 @@ FixedWingController::task_main()
 	float delta_r;
 	float delta_t;
 
-	//intermediate outputs
-	float theta_c;
-
 
 	//Initialize Pitch-Hold Controller
 	float pitch_ki = _parameters.p_i;
@@ -449,7 +446,7 @@ FixedWingController::task_main()
 	float ts = 0.01;
 	float pitch_tau = _parameters.tconst;
 	float evelator_lim = 45.0 * (3.14159)/180.0
-	UAVpid.UAVpid pitchHold(&_x_hat.theta, &delta_e, &_x_command.pitch,
+	UAVpid.UAVpid pitchHold(&_x_hat.theta, &delta_e, &_x_command.theta,
 		pitch_kp, pitch_ki, pitch_kd, elevator_lim, -elevator_lim,
 		ts, pitch_tau);
 
@@ -460,7 +457,7 @@ FixedWingController::task_main()
 	float alt_kd = 0;
 	float alt_tau;
 	float theta_lim = 30.0 * (3.14159)/180.0;
-	UAVpid.UAVpid altitudeHold(&_x_hat.h, &theta_c, &_x_command_h,
+	UAVpid.UAVpid altitudeHold(&_x_hat.h, &_x_command.theta, &_x_command.h,
 		alt_kp, alt_ki, alt_kd, theta_lim, -theta_lim,
 		ts, alt_tau);
 
@@ -470,7 +467,7 @@ FixedWingController::task_main()
 	float ASP_kp;
 	float ASP_kd = 0;
 	float ASP_tau;
-	UAVpid.UAVpid airspeedPitchHold(&_airspeed, &theta_c, &airspeed_scaling,
+	UAVpid.UAVpid airspeedPitchHold(&_x_hat.Va, &_x_command.theta, &_x_command.Va,
 		ASP_kp, ASP_ki, ASP_kd, theta_lim, -theta_lim,
 		ts, ASP_tau);
 
@@ -480,7 +477,7 @@ FixedWingController::task_main()
 	float AST_kp;
 	float AST_kd = 0;
 	float AST_tau;
-	UAVpid.UAVpid airspeedThrottleHold(&_airspeed, &delta_t, &airspeed_scaling,
+	UAVpid.UAVpid airspeedThrottleHold(&_x_hat.Va, &delta_t, &_x_command.Va,
 		AST_kp, AST_ki, AST_kd, 1, 0,
 		ts, AST_tau);
 
@@ -706,7 +703,7 @@ FixedWingController::task_main()
 				{
 					//In take-off zone
 					delta_t = 1;
-					theta_c = _parameters.theta_takeoff;
+					_x_command.theta = _parameters.theta_takeoff;
 				}
 				else if(h <= h_c - _parameters.altitude_hold_zone)
 				{
