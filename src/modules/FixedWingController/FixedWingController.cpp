@@ -53,7 +53,6 @@ namespace LateralControl
 static const int ERROR = -1;
 
 FixedWingController	*g_control = nullptr;
-}
 
 FixedWingController::FixedWingController() :
 
@@ -97,7 +96,19 @@ FixedWingController::FixedWingController() :
 	_global_pos = {};
 	_vehicle_status = {};
 
+	/* MAGICC Params Added */
+	_parameter_handles.kp_roll = param_find("FW_ROLL_P");
+	_parameter_handles.ki_roll = param_find("FW_ROLL_I");
+	_parameter_handles.kd_roll = param_find("FW_ROLL_D");
+	_parameter_handles.max_roll_output = param_find("FW_MAX_AILERON_OUTPUT");
+	_parameter_handles.max_roll_output = param_find("FW_MIN_AILERON_OUTPUT");
+	_parameter_handles.kp_course = param_find("FW_COURSE_P");
+	_parameter_handles.ki_course = param_find("FW_COURSE_I");
+	_parameter_handles.kd_course = param_find("FW_COURSE_D");
+	_parameter_handles.max_course_output = param_find("FW_MAX_COURSE_OUTPUT");
+	_parameter_handles.tau = param_find("FW_TAU");
 
+	/* original parameters */
 	_parameter_handles.tconst = param_find("FW_ATT_TC");
 	_parameter_handles.p_p = param_find("FW_PR_P");
 	_parameter_handles.p_i = param_find("FW_PR_I");
@@ -170,7 +181,19 @@ FixedWingController::~FixedWingController()
 int
 FixedWingController::parameters_update()
 {
+	/* MAGICC PARAMS */
+	param_get(_parameter_handles.kp_roll, &(_parameters.kp_roll));
+	param_get(_parameter_handles.ki_roll, &(_parameters.ki_roll));
+	param_get(_parameter_handles.kd_roll, &(_parameters.kd_roll));
+	param_get(_parameter_handles.max_roll_output, &(_parameters.max_aileron_output));
+	param_get(_parameter_handles.max_roll_output, &(_parameters.min_aileron_output));
+	param_get(_parameter_handles.kp_course, &(_parameters.kp_course));
+	param_get(_parameter_handles.ki_course, &(_parameters.ki_course));
+	param_get(_parameter_handles.kd_course, &(_parameters.kd_course));
+	param_get(_parameter_handles.max_course_output, &(_parameters.max_course_output));
+	param_get(_parameter_handles.tau, &(_parameters.tau));
 
+	/* NORIGINAL PARAMS */
 	param_get(_parameter_handles.tconst, &(_parameters.tconst));
 	param_get(_parameter_handles.p_p, &(_parameters.p_p));
 	param_get(_parameter_handles.p_i, &(_parameters.p_i));
@@ -210,7 +233,7 @@ FixedWingController::parameters_update()
 	_parameters.man_roll_max = math::radians(_parameters.man_roll_max);
 	_parameters.man_pitch_max = math::radians(_parameters.man_pitch_max);
 
-
+	/* ORIGINAL CONTROLLERS */
 	/* pitch control parameters */
 	_pitch_ctrl.set_time_constant(_parameters.tconst);
 	_pitch_ctrl.set_k_p(_parameters.p_p);
@@ -238,141 +261,14 @@ FixedWingController::parameters_update()
 	_yaw_ctrl.set_max_rate(math::radians(_parameters.y_rmax));
 
 	return OK;
+
+	/* MAGICC CONTROLLERS */
+	_roll_ctrl_MAGICC.setGains(_parameters.kp_roll, _parameters.ki_roll, _parameters.kd_roll);
+	_roll_ctrl_MAGICC.setOutputLimits(_parameters.max_roll_output,_parameters.min_roll_ouptut);
+	_course_ctrl_MAGICC.setGains(_parameters.kp_course, _parameters.ki_course, _parameters.kd_course);
+	_course_ctrl_MAGICC.setOutputLimits(_parameters.max_course_output,_parameters.min_course_ouptut);
 }
 
-void
-FixedWingController::vehicle_control_mode_poll()
-{
-	bool vcontrol_mode_updated;
-
-	/* Check HIL state if vehicle status has changed */
-	orb_check(_vcontrol_mode_sub, &vcontrol_mode_updated);
-
-	if (vcontrol_mode_updated) {
-
-		orb_copy(ORB_ID(vehicle_control_mode), _vcontrol_mode_sub, &_vcontrol_mode);
-	}
-}
-
-void
-FixedWingController::vehicle_manual_poll()
-{
-	bool manual_updated;
-
-	/* get pilots inputs */
-	orb_check(_manual_sub, &manual_updated);
-
-	if (manual_updated) {
-
-		orb_copy(ORB_ID(manual_control_setpoint), _manual_sub, &_manual);
-	}
-}
-
-void
-FixedWingController::vehicle_airspeed_poll()
-{
-	/* check if there is a new position */
-	bool airspeed_updated;
-	orb_check(_airspeed_sub, &airspeed_updated);
-
-	if (airspeed_updated) {
-		orb_copy(ORB_ID(airspeed), _airspeed_sub, &_airspeed);
-//		warnx("airspeed poll: ind: %.4f,  true: %.4f", _airspeed.indicated_airspeed_m_s, _airspeed.true_airspeed_m_s);
-	}
-}
-
-void
-FixedWingController::vehicle_accel_poll()
-{
-	/* check if there is a new position */
-	bool accel_updated;
-	orb_check(_accel_sub, &accel_updated);
-
-	if (accel_updated) {
-		orb_copy(ORB_ID(sensor_accel0), _accel_sub, &_accel);
-	}
-}
-
-void
-FixedWingController::vehicle_setpoint_poll()
-{
-	/* check if there is a new setpoint */
-	bool att_sp_updated;
-	orb_check(_att_sp_sub, &att_sp_updated);
-
-	if (att_sp_updated) {
-		orb_copy(ORB_ID(vehicle_attitude_setpoint), _att_sp_sub, &_att_sp);
-		_setpoint_valid = true;
-	}
-}
-
-void
-FixedWingController::global_pos_poll()
-{
-	/* check if there is a new global position */
-	bool global_pos_updated;
-	orb_check(_global_pos_sub, &global_pos_updated);
-
-	if (global_pos_updated) {
-		orb_copy(ORB_ID(vehicle_global_position), _global_pos_sub, &_global_pos);
-	}
-}
-
-void
-FixedWingController::vehicle_status_poll()
-{
-	/* check if there is new status information */
-	bool vehicle_status_updated;
-	orb_check(_vehicle_status_sub, &vehicle_status_updated);
-
-	if (vehicle_status_updated) {
-		orb_copy(ORB_ID(vehicle_status), _vehicle_status_sub, &_vehicle_status);
-	}
-}
-
-void
-FixedWingController::x_command_poll()
-{
-	//Poll the attitude setpoint (roll, pitch, yaw)
-	vehicle_setpoint_poll();
-
-	//Poll the current waypoint information to get altitude and airspeed commands
-	bool pos_triplet_updated;
-	orb_check(_pos_sp_triplet_sub, &pos_triplet_updated);
-
-	if (vehicle_status_updated) {
-		orb_copy(ORB_ID(position_setpoint_triplet), _pos_sp_triplet_sub, &_pos_sp_triplet);
-	}
-
-	_x_command.pitch 	= _att_sp.pitch_body;
-	_x_command.roll 	= _att_sp.roll_body;
-	_x_command.yaw 		= _att_sp.yaw_body;
-
-
-	float u, v, w;
-	u = _pos_sp_triplet.current.vx;
-	v = _pos_sp_triplet.current.vy;
-	w = _pos_sp_triplet.current.vz;
-	_x_command.Va 		= math.sqrt(u*u + v*v + w*w);
-
-	_x_command.pn 		= _pos_sp_triplet.current.x;
-	_x_command.pe 		= _pos_sp_triplet.current.y;
-	_x_command.pd 		= _pos_sp_triplet.current.z;
-
-	//_x_command.altitude 	= _pos_sp_triplet.current.alt;
-}
-
-void
-FixedWingController::x_hat_poll()
-{
-	bool x_hat_updated;
-	orb_check(_x_hat_sub, &x_hat_updated);
-
-	if(x_hat_updated)
-	{
-		orb_copy(ORB_ID(x_hat), _x_hat_sub, &_x_hat);
-	}
-}
 
 void
 FixedWingController::task_main_trampoline(int argc, char *argv[])
@@ -407,8 +303,6 @@ FixedWingController::task_main()
 	/* rate limit attitude control to 50 Hz (with some margin, so 17 ms) */
 	orb_set_interval(_att_sub, 17);
 
-	parameters_update();
-
 	/* get an initial update for all sensor and status data */
 	vehicle_airspeed_poll();
 	vehicle_setpoint_poll();
@@ -422,21 +316,12 @@ FixedWingController::task_main()
 	/* wakeup source(s) */
 	struct pollfd fds[2];
 
-	//Current Values
-	float airspeed;
-
 	//Declare the setpoints to be used in the PID controllers
 	float roll_sp;
 	float pitch_sp;
 	float throttle_sp;
 	float airspeed_sp;	
-	float airspeed_scaling;	
-
-	//outputs
-	float delta_e;
-	float delta_a;
-	float delta_r;
-	float delta_t;
+	float airspeed_scaling;
 
 
 	//Initialize Pitch-Hold Controller
@@ -446,7 +331,7 @@ FixedWingController::task_main()
 	float ts = 0.01;
 	float pitch_tau = _parameters.tconst;
 	float evelator_lim = 45.0 * (3.14159)/180.0
-	_pitchHold_ctrl = new UAVpid.UAVpid(&_x_hat.theta, &delta_e, &_x_command.theta,
+	_pitchHold_ctrl = new UAVpid.UAVpid(&_x_hat.theta, &_delta_e, &_x_command.theta,
 		pitch_kp, pitch_ki, pitch_kd, elevator_lim, -elevator_lim,
 		ts, pitch_tau);
 
@@ -477,11 +362,25 @@ FixedWingController::task_main()
 	float AST_kp;
 	float AST_kd = 0;
 	float AST_tau;
-	_airspeedThrottleHold_ctrl = new UAVpid.UAVpid(&_x_hat.Va, &delta_t, &_x_command.Va,
+	_airspeedThrottleHold_ctrl = new UAVpid.UAVpid(&_x_hat.Va, &_delta_t, &_x_command.Va,
 		AST_kp, AST_ki, AST_kd, 1, 0,
 		ts, AST_tau);
 
+	//Initialize Roll Controller
+	_rollControl = new UAVpid.UAVpid(&_x_hat.phi, &_delta_a, &_x_command.phi,
+					 _parameters.kp_roll, _parameters.ki_roll, _parameters.kd_roll,
+					 _parameters.tau,     _parameters.max_roll_output,_parameters.min_roll_ouptut);
 
+	// Initialize Course-Hold Controller
+	_courseControl = new UAVpid.UAVpid(&_x_hat.chi, &_x_command.phi, &_x_command.chi,
+				           _parameters.kp_course, _parameters.ki_course, _parameters.kd_course,
+					   _parameters.tau,_parameters.max_course_output,-1.0*_parameters.max_course_ouptut);
+
+	/* Update Parameters - this function also updates
+	 * the gains for the controllers, so it has to happen
+	 * after the controllers are initialized
+	 */
+	parameters_update();
 
 	/* Setup of loop */
 	fds[0].fd = _params_sub;
@@ -497,17 +396,14 @@ FixedWingController::task_main()
 
 		/* wait for up to 500ms for data */
 		int pret = poll(&fds[0], (sizeof(fds) / sizeof(fds[0])), 100);
-
 		/* timed out - periodic check for _task_should_exit, etc. */
 		if (pret == 0)
 			continue;
-
 		/* this is undesirable but not much we can do - might want to flag unhappy status */
 		if (pret < 0) {
 			warn("poll error %d, %d", pret, errno);
 			continue;
 		}
-
 		perf_begin(_loop_perf);
 
 		/* only update parameters if they changed */
@@ -515,14 +411,12 @@ FixedWingController::task_main()
 			/* read from param to clear updated flag */
 			struct parameter_update_s update;
 			orb_copy(ORB_ID(parameter_update), _params_sub, &update);
-
 			/* update parameters from storage */
 			parameters_update();
 		}
 
 		/* only run controller if attitude changed */
 		if (fds[1].revents & POLLIN) {
-
 
 			static uint64_t last_run = 0;
 			float deltaT = (hrt_absolute_time() - last_run) / 1000000.0f;
@@ -534,31 +428,20 @@ FixedWingController::task_main()
 
 			/* load local copies */
 			orb_copy(ORB_ID(vehicle_attitude), _att_sub, &_att);
-
 			vehicle_airspeed_poll();
-
 			vehicle_setpoint_poll();
-
 			vehicle_accel_poll();
-
 			vehicle_control_mode_poll();
-
 			vehicle_manual_poll();
-
 			global_pos_poll();
-
 			vehicle_status_poll();
-
-			x_command_poll();
-			
+			x_command_poll();			
 			x_hat_poll();
 
 			/* lock integrator until control is started */
 			bool lock_integrator;
-
 			if (_vcontrol_mode.flag_control_attitude_enabled) {
 				lock_integrator = false;
-
 			} else {
 				lock_integrator = true;
 			}
@@ -573,25 +456,10 @@ FixedWingController::task_main()
 			}
 
 			/* decide if in stabilized or full manual control */
-
 			if (_vcontrol_mode.flag_control_attitude_enabled) {
-
-				/* scale around tuning airspeed */
-
-				
-
-				/* if airspeed is not updating, we assume the normal average speed */
-				if (bool nonfinite = !isfinite(_airspeed.true_airspeed_m_s) ||
-				    hrt_elapsed_time(&_airspeed.timestamp) > 1e6) {
-					airspeed = _parameters.airspeed_trim;
-					if (nonfinite) {
-						perf_count(_nonfinite_input_perf);
-					}
-				} else {
-					/* prevent numerical drama by requiring 0.5 m/s minimal speed */
-					airspeed = math::max(0.5f, _airspeed.true_airspeed_m_s);
-				}
-
+			
+				compute_longitudinal_control();
+				compute_lateral_control();
 				/*
 				 * For scaling our actuators using anything less than the min (close to stall)
 				 * speed doesn't make any sense - its the strongest reasonable deflection we
@@ -702,19 +570,19 @@ FixedWingController::task_main()
 				if(h < _parameters.altitude_takeoff_zone)
 				{
 					//In take-off zone
-					delta_t = 1;
+					_delta_t = 1;
 					_x_command.theta = _parameters.theta_takeoff;
 				}
 				else if(h <= h_c - _parameters.altitude_hold_zone)
 				{
 					//In Climb Zone
-					delta_t = 1;
+					_delta_t = 1;
 					_airspeedPitchHold_ctrl->compute();
 				}
 				else if(h >= h_c + _parameters.altitude_hold_zone)
 				{
 					//In Descend Zone
-					delta_t = 0;
+					_delta_t = 0;
 					_airspeedPitchHold_ctrl->compute();
 				}
 				else
@@ -725,10 +593,10 @@ FixedWingController::task_main()
 				}
 				_pitchHold_ctrl->compute();
 
-				_actuators.control[0] = delta_e;
-				_actuators.control[1] = delta_a;
-				_actuators.control[2] = delta_r;
-				_actuators.control[3] = delta_t;
+				_actuators.control[0] = _delta_e;
+				_actuators.control[1] = _delta_a;
+				_actuators.control[2] = _delta_r;
+				_actuators.control[3] = _delta_t;
 
 
 
@@ -955,3 +823,5 @@ int fw_att_control_main(int argc, char *argv[])
 	warnx("unrecognized command");
 	return 1;
 }
+
+} // end namespace

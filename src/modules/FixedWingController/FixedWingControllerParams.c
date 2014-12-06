@@ -417,7 +417,58 @@ PARAM_DEFINE_FLOAT(FW_ROLL_D,1.0f);
  * 
  * Maximum output on aileron output
  */
-PARAM_DEFINE_FLOAT(FW+)
+PARAM_DEFINE_FLOAT(FW_MAX_AILERON_OUTPUT,2000.f);
+
+/**
+ * Roll Minimum Actuator Control
+ * 
+ * Minimum output on aileron output
+ */
+PARAM_DEFINE_FLOAT(FW_MIN_AILERON_OUTPUT,500.0f);
+
+/********  Course Controller **********/
+/**
+ * Course Controller P Gain
+ *
+ * Proportional Gain for Course Controller
+ *
+ * @group FW Attitude Control
+ */
+PARAM_DEFINE_FLOAT(FW_COURSE_P,1.0f);
+
+/**
+ * Course Controller I Gain
+ *
+ * Integral Gain for Course Controller
+ *
+ * @group FW Attitude Control
+ */
+PARAM_DEFINE_FLOAT(FW_COURSE_I,1.0f);
+
+/**
+ * Course Controller D Gain
+ *
+ * Derivative Gain for Course Controller
+ *
+ * @group FW Attitude Control
+ */
+PARAM_DEFINE_FLOAT(FW_COURSE_D,1.0f);
+
+/**
+ * Roll Maximum Actuator Control
+ * 
+ * Maximum output to roll command (deg)
+ */
+PARAM_DEFINE_FLOAT(FW_MAX_COURSE_OUTPUT,45.0f);
+
+/**
+ * Tau
+ *
+ * Constant for Low-Pass-Filter in Dirty Derivatives of
+ * Autopilot PID loops
+ */
+PARAM_DEFINE_FLOAT(FW_TAU,0.03f);
+
 
 
 

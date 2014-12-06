@@ -39,6 +39,7 @@ MODULE_COMMAND	= FixedWingController
 
 SRCS		= FixedWingController.cpp \
                   FixedWingController.cpp \
+                  FixedWingControllerSubscribers.cpp \
 		  FixedWingControllerParams.c
 
 MODULE_STACKSIZE = 1200

@@ -94,19 +94,19 @@ private:
 	orb_advert_t	_actuators_0_pub;		/**< actuator control group 0 setpoint */
 	orb_advert_t	_actuators_1_pub;		/**< actuator control group 1 setpoint (Airframe) */
 
-	struct vehicle_attitude_s				_att;			/**< vehicle attitude */
-	struct accel_report						_accel;			/**< body frame accelerations */
+	struct vehicle_attitude_s			_att;			/**< vehicle attitude */
+	struct accel_report				_accel;			/**< body frame accelerations */
 	struct vehicle_attitude_setpoint_s		_att_sp;		/**< vehicle attitude setpoint */
 	struct manual_control_setpoint_s		_manual;		/**< r/c channel data */
-	struct airspeed_s						_airspeed;		/**< airspeed */
+	struct airspeed_s				_airspeed;		/**< airspeed */
 	struct vehicle_control_mode_s			_vcontrol_mode;		/**< vehicle control mode */
-	struct actuator_controls_s				_actuators;		/**< actuator control inputs */
-	struct actuator_controls_s				_actuators_airframe;	/**< actuator control inputs */
+	struct actuator_controls_s			_actuators;		/**< actuator control inputs */
+	struct actuator_controls_s			_actuators_airframe;	/**< actuator control inputs */
 	struct vehicle_global_position_s		_global_pos;		/**< global position */
-	struct vehicle_status_s					_vehicle_status;	/**< vehicle status */
+	struct vehicle_status_s				_vehicle_status;	/**< vehicle status */
 	struct position_setpoint_triplet_s		_pos_sp_triplet;	/**< waypoints, to be replaced by something more elegant later */
-	struct x_command_s						_x_command;		/**< commands structure */
-	struct x_hat_s							_x_hat;			/**< estimates */
+	struct x_command_s				_x_command;		/**< commands structure */
+	struct x_hat_s					_x_hat;			/**< estimates */
 	
 
 	perf_counter_t	_loop_perf;			/**< loop performance counter */
@@ -155,7 +155,18 @@ private:
 		float man_roll_max;						/**< Max Roll in rad */
 		float man_pitch_max;					/**< Max Pitch in rad */
 
-	}		_parameters;			/**< local copies of interesting parameters */
+		// MAGICC parameters
+		float kp_roll;
+		float ki_roll;
+		float kd_roll;
+		float max_aileron_output;
+		float min_aileron_output;
+		float kp_course;
+		float ki_course;
+		float kd_course;
+		float max_course_output;
+		float tau;
+	}	_parameters;			/**< local copies of interesting parameters */
 
 	struct {
 
@@ -194,32 +205,41 @@ private:
 		param_t pitchsp_offset_deg;
 		param_t man_roll_max;
 		param_t man_pitch_max;
-	}		_parameter_handles;		/**< handles for interesting parameters */
 
+		param_t kp_roll;
+		param_t ki_roll;
+		param_t kd_roll;
+		param_t max_aileron_output;
+		param_t min_aileron_output;
+		param_t kp_course;
+		param_t ki_course;
+		param_t kd_course;
+		param_t max_course_output;
+		param_t tau;
+	} _parameter_handles;		/**< handles for interesting parameters */
+
+
+	bool _lock_integrator // a boolean that is controlled by the vehicle control mode
 
 	float _ts;
 	float _tau;
-	UAVpid::UAVpid* _roll_ctrl;
-	float _roll_ctrl_input;
-	float _roll_ctrl_output;
-	float _roll_c;
-	float _roll_actuator_pos_limit;
-	float _roll_actuator_neg_limit;
+	UAVpid::UAVpid* _rollControl;
+	UAVpid::UAVpid* _courseControl;
+	float _phi_c;
+	float _chi_c;
+	float _delta_e;
+	float _delta_a;
+	float _delta_r;
+	float _delta_t;
 
-	UAVpid::UAVpid* _course_ctrl;
-	float _course_ctrl_input;
-	float _course_ctrl_output;
-	float _course_c;
-	float _course_actuator_pos_limit;
-	float _course_actuator_neg_limit;
-
+/* To be implmented later
 	UAVpid::UAVpid* _sideslip_ctrl;
 	float _sideslip_ctrl_input;
 	float _sideslip_ctrl_output;
 	float _sideslip_c;
 	float _sideslip_actuator_pos_limit;
 	float _sideslip_actuator_neg_limit;
-
+*/
 
 
 /* These willl probably be deleted later
@@ -300,13 +320,6 @@ private:
 	 * Main sensor collection task.
 	 */
 	void		task_main();
-
-
-
-	/**
-	 *
-	 */
-
 
 };
 
