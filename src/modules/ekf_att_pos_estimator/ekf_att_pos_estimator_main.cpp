@@ -595,19 +595,19 @@ FixedwingEstimator::parameters_update()
 		SP1[3] = 2 * PI / 180.0;
 
 		SQ1[0] = 0.00001;
-		SQ2[3] = 0.00001;
+		SQ1[3] = 0.00001;
 
 		SR1[0] = _parameters.acc_pnoise * _parameters.acc_pnoise;
 		SR1[4] = _parameters.acc_pnoise * _parameters.acc_pnoise;
 		SR1[8] = _parameters.acc_pnoise * _parameters.acc_pnoise;
 
-		StateEstimator.P1 = SP1;
-		StateEstimator.Q1 = SQ1;
-		StateEstimator.R1 = SR1;
+		StateEstimator::P1 = SP1;
+		StateEstimator::Q1 = SQ1;
+		StateEstimator::R1 = SR1;
 
-		SP2 = new double[7*7];
-		SQ2 = new double[7*7];
-		SR2 = new double[6*6];
+		double * SP2 = new double[7*7];
+		double * SQ2 = new double[7*7];
+		double * SR2 = new double[6*6];
 
 		SP2[0]  = 3 * 3;
 		SP2[8]  = 3 * 3;
@@ -632,16 +632,15 @@ FixedwingEstimator::parameters_update()
 		SR2[28] = 1;
 		SR2[35] = 1;
 
-		StateEstimator.P2 = SP2;
-		StateEstimator.Q2 = SQ2;
-		StateEstimator.R2 = SR2;			
+		StateEstimator::P2 = SP2;
+		StateEstimator::Q2 = SQ2;
+		StateEstimator::R2 = SR2;			
 	}
 
 	return OK;
 }
 
-void
-FixedwingEstimator::vehicle_status_poll()
+void FixedwingEstimator::vehicle_status_poll()
 {
 	bool vstatus_updated;
 
@@ -654,8 +653,7 @@ FixedwingEstimator::vehicle_status_poll()
 	}
 }
 
-int
-FixedwingEstimator::check_filter_state()
+int FixedwingEstimator::check_filter_state()
 {
 	/*
 	 *    CHECK IF THE INPUT DATA IS SANE
@@ -1136,7 +1134,8 @@ FixedwingEstimator::task_main()
 					uu674[9]  = _gps.lon * 1e7 * 6371;			// east pos on earth in meters
 					uu674[10] = _gps.alt * 1e3;					// altitude in meters
 					uu674[11] = _gps.vel_m_s;					// ground speed in m/s
-					uu674[12] = (2*PI + _gps.cog_rad) % (2*PI) 	// course angle in radians
+					uu674[12] = fmod((2*M_PI_F + _gps.cog_rad) , 2*M_PI_F);	// course angle in radians
+					// Needed to use fmod instead of % to do a float mod here. 
 
 					// warnx("GPS updated: status: %d, vel: %8.4f %8.4f %8.4f", (int)GPSstatus, velNED[0], velNED[1], velNED[2]);
 
@@ -1472,7 +1471,6 @@ FixedwingEstimator::task_main()
                     // #### PIXHAWK 674 CODE ####
                     StateEstimator::Estimate(xhat674, uu674, P674);
                     
-
 					// Output results
 					math::Quaternion q(_ekf->states[0], _ekf->states[1], _ekf->states[2], _ekf->states[3]);
 					math::Matrix<3, 3> R = q.to_dcm();

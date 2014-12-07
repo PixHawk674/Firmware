@@ -254,7 +254,11 @@ bool FixedwingPositionControl::control_position(const math::Vector<2> &current_p
 
 		if (pos_sp_triplet.current.type == SETPOINT_TYPE_POSITION) {
 			/* waypoint is a plain navigation waypoint */
+			if (_parameters.use_magicc_straightline == 0){
 				_l1_control.navigate_waypoints(prev_wp, curr_wp, current_position, ground_speed_2d);
+			}else{
+				FixedwingPositionControl::navigate_waypoints(prev_wp, curr_wp, current_position, ground_speed_2d);
+			}
 			_att_sp.roll_body = _l1_control.nav_roll();
 			_att_sp.yaw_body = _l1_control.nav_bearing();
 
@@ -321,7 +325,11 @@ bool FixedwingPositionControl::control_position(const math::Vector<2> &current_p
 			} else {
 
 				/* normal navigation */
-				_l1_control.navigate_waypoints(prev_wp, curr_wp, current_position, ground_speed_2d);
+				if (_parameters.use_magicc_straightline == 0){
+					_l1_control.navigate_waypoints(prev_wp, curr_wp, current_position, ground_speed_2d);
+				}else{
+					FixedwingPositionControl::navigate_waypoints(prev_wp, curr_wp, current_position, ground_speed_2d);
+				}
 			}
 
 			_att_sp.roll_body = _l1_control.nav_roll();
@@ -460,7 +468,11 @@ bool FixedwingPositionControl::control_position(const math::Vector<2> &current_p
 			if (launch_detection_state != LAUNCHDETECTION_RES_NONE) {
 				/* Launch has been detected, hence we have to control the plane. */
 
-				_l1_control.navigate_waypoints(prev_wp, curr_wp, current_position, ground_speed_2d);
+				if (_parameters.use_magicc_straightline == 0){
+					_l1_control.navigate_waypoints(prev_wp, curr_wp, current_position, ground_speed_2d);
+				}else{
+					FixedwingPositionControl::navigate_waypoints(prev_wp, curr_wp, current_position, ground_speed_2d);
+				}
 				_att_sp.roll_body = _l1_control.nav_roll();
 				_att_sp.yaw_body = _l1_control.nav_bearing();
 

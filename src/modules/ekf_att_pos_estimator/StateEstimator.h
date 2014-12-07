@@ -9,6 +9,8 @@
 #ifndef _StateEstimator_h
 #define _StateEstimator_h
 
+#define GRAVITY 9.81
+
 class StateEstimator
 {
 public:
@@ -23,27 +25,27 @@ public:
     
     
 private:
-    static double _pHat = 0;
-    static double _qHat = 0;
-    static double _rHat = 0;
+    static double _pHat;
+    static double _qHat;
+    static double _rHat;
     //static double _staticPresHat = 0;
     //static double _diffPresHat = 0;
-    static double _hHat = 0;
-    static double _Vahat = 0;
-    static double _phiHat = 0;
-    static double _thetaHat = 0;
-    static double _pnHat = 0;
-    static double _peHat = 0;
-    static double _chiHat = 0;
-    static double _VgHat = 0;
-    static double _psiHat = 0;
-    static double _wnHat = 0;
-    static double _weHat = 0;
-    static double _alphaHat = 0;
-    static double _betaHat = 0;
-    static double _bxHat = 0;
-    static double _byHat = 0;
-    static double _bzHat = 0;
+    static double _hHat;
+    static double _Vahat;
+    static double _phiHat;
+    static double _thetaHat;
+    static double _pnHat;
+    static double _peHat;
+    static double _chiHat;
+    static double _VgHat;
+    static double _psiHat;
+    static double _wnHat;
+    static double _weHat;
+    static double _alphaHat;
+    static double _betaHat;
+    static double _bxHat;
+    static double _byHat;
+    static double _bzHat;
     
     static double LPF(double u, double y, double alpha);
     static void RollPitchEstimator(double* xhat, double* x0, double* u, double Ts, double* P, double* Q, double* R);

@@ -6,8 +6,40 @@
 //
 //
 
-#include <StateEstimator.h>
+#include "StateEstimator.h"
 #include <cmath>
+
+// This has to be here for... reasons... 
+    extern double StateEstimator::_pHat = 0;
+    extern double StateEstimator::_qHat = 0;
+    extern double StateEstimator::_rHat = 0;
+    //extern //static double _staticPresHat = 0;
+    //extern //static double _diffPresHat = 0;
+    extern double StateEstimator::_hHat = 0;
+    extern double StateEstimator::_Vahat = 0;
+    extern double StateEstimator::_phiHat = 0;
+    extern double StateEstimator::_thetaHat = 0;
+    extern double StateEstimator::_pnHat = 0;
+    extern double StateEstimator::_peHat = 0;
+    extern double StateEstimator::_chiHat = 0;
+    extern double StateEstimator::_VgHat = 0;
+    extern double StateEstimator::_psiHat = 0;
+    extern double StateEstimator::_wnHat = 0;
+    extern double StateEstimator::_weHat = 0;
+    extern double StateEstimator::_alphaHat = 0;
+    extern double StateEstimator::_betaHat = 0;
+    extern double StateEstimator::_bxHat = 0;
+    extern double StateEstimator::_byHat = 0;
+    extern double StateEstimator::_bzHat = 0;
+
+    extern double* StateEstimator::P1;
+    extern double* StateEstimator::Q1;
+    extern double* StateEstimator::R1;
+    
+    extern double* StateEstimator::P2;
+    extern double* StateEstimator::Q2;
+    extern double* StateEstimator::R2;
+    
 
 void StateEstimator::Estimate(double* xhat, double* uu, double* P)
 {
@@ -39,6 +71,7 @@ void StateEstimator::Estimate(double* xhat, double* uu, double* P)
     _pHat = LPF(yGyroX, _pHat, alpha);
     _qHat = LPF(yGyroY, _qHat, alpha);
     _rHat = LPF(yGyroZ, _rHat, alpha);
+
     
     //_staticPresHat = LPF(yStaticPres, _staticPresHat, alpha);
     //_diffPresHat = LPF(yDiffPres, _diffPresHat, alpha);
@@ -115,6 +148,9 @@ void StateEstimator::Estimate(double* xhat, double* uu, double* P)
     //xhat[16] = _bxHat;
     //xhat[17] = _byHat;
     //xhat[18] = _bzHat;
+
+    double dummy = yGPSH + altitude + airspeed + rho;
+    alpha = alpha + dummy - dummy;
 }
 
 double StateEstimator::LPF(double x, double y0, double alpha)
@@ -199,19 +235,20 @@ void StateEstimator::RollPitchEstimator(double* xhat,
     
     for(int i = 0; i < 3; i++)
     {
-        phi   = xhat[0];
-        theta = xhat[1];
+        double phi   = xhat[0];
+        double theta = xhat[1];
         
         C[0] = 0;
-        C[1] = (q*Va+g)*cos(theta);
-        C[2] = -g*cos(phi)*cos(theta);
-        C[3] = -r*Va*sin(theta)-p*Va*cos(theta)+g*sin(phi)*sin(theta);
-        C[4] = g*sin(phi)*cos(theta);
-        C[5] = (q*Va + g*cos(phi))*sin(theta);
+        C[1] = (q*Va+GRAVITY)*cos(theta);
+        C[2] = -GRAVITY*cos(phi)*cos(theta);
+        C[3] = -r*Va*sin(theta)-p*Va*cos(theta)+GRAVITY*sin(phi)*sin(theta);
+        C[4] = GRAVITY*sin(phi)*cos(theta);
+        C[5] = (q*Va + GRAVITY*cos(phi))*sin(theta);
         
         // select the ith row of dh/dx
-        for(int j=0;j<2;j++)
+        for(int j=0;j<2;j++){
             Ci[j] = C[i*2+j]; // 1x2 matrix
+        }
         
         Matrix::Multiply(L,P,Ci,2,2,1);     // P*Ci'
         Matrix::Multiply(L1,Ci,L,1,2,1);    // Ci*L
@@ -231,9 +268,9 @@ void StateEstimator::RollPitchEstimator(double* xhat,
             }
         }
         Matrix::Multiply(P,Pd,P,2,2,2);     // P = (I-L*Ci)*P
-        h[0] = q*Va*sin(theta)+g*sin(theta);
-        h[1] = r*Va*cos(theta)-p*Va*sin(theta)-g*cos(theta)*sin(phi);
-        h[2] = -q*Va*cos(theta)-g*cos(theta)*cos(phi);
+        h[0] = q*Va*sin(theta)+GRAVITY*sin(theta);
+        h[1] = r*Va*cos(theta)-p*Va*sin(theta)-GRAVITY*cos(theta)*sin(phi);
+        h[2] = -q*Va*cos(theta)-GRAVITY*cos(theta)*cos(phi);
         
         Matrix::Scale(L,L,y[i]-h[i],2);
         Matrix::Add(xhat,xhat,L,2);
@@ -274,30 +311,38 @@ void StateEstimator::CoursePositionEstimator(double* xhat,
     double* A1 = new double[7*7];
     double* A2 = new double[7*7];
     double* B = new double[7*7];
+
+    double pn;
+    double pe;
+    double Vg;
+    double chi;
+    double wn;
+    double we;
+    double psi;
     for (int i = 0; i < divs; i++)
     {
         // advance the state using predictive model
-        double pn = xhat[0];
-        double pe = xhat[1];
-        double Vg = xhat[2];
-        double chi = xhat[3];
-        double wn = xhat[4];
-        double we = xhat[5];
-        double psi = xhat[6];
+       // double pn = xhat[0];  // Variable pn was not used
+       // double pe = xhat[1];
+        Vg = xhat[2];
+        chi = xhat[3];
+        wn = xhat[4];
+        we = xhat[5];
+        psi = xhat[6];
         
         double psidot = q*(sin(phi)/cos(theta)) + r*(cos(phi)/cos(theta));
         
         xhat[0] += ts * Vg*cos(theta);
         xhat[1] += ts * Vg*sin(theta);
         xhat[2] += ts * ((Va*cos(psi)+wn)*(-Va*psidot*sin(psi))+(Va*sin(psi)+we)*(Va*psidot*cos(psi))) / Vg;
-        xhat[3] += ts * (g/Vg)*tan(phi)*cos(chi-psi);
+        xhat[3] += ts * (GRAVITY/Vg)*tan(phi)*cos(chi-psi);
         //xhat[4] += ts * 0;
         //xhat[5] += ts * 0;
         xhat[6] += ts * psidot;
         
         // update the covariance matrix
-        pn = xhat[0];
-        pe = xhat[1];
+        //pn = xhat[0];
+       // pe = xhat[1];
         Vg = xhat[2];
         chi = xhat[3];
         wn = xhat[4];
@@ -314,9 +359,9 @@ void StateEstimator::CoursePositionEstimator(double* xhat,
         A[18] = -psidot*Va*sin(psi);
         A[19] = psidot*Va*cos(psi);
         A[20] = -psidot*Va*(wn*cos(psi)+we*sin(psi))/Vg;
-        A[23] = -g/(Vg*Vg)*tan(phi)*cos(chi-psi);
-        A[24] = -g/Vg*tan(phi)*sin(chi-psi);
-        A[27] = g/Vg*tan(phi)*sin(chi-psi);
+        A[23] = -GRAVITY/(Vg*Vg)*tan(phi)*cos(chi-psi);
+        A[24] = -GRAVITY/Vg*tan(phi)*sin(chi-psi);
+        A[27] = GRAVITY/Vg*tan(phi)*sin(chi-psi);
         
         Matrix::Multiply(A1,A,P,7,7,7);
         Matrix::Transpose(At,A,7,7);
@@ -346,8 +391,8 @@ void StateEstimator::CoursePositionEstimator(double* xhat,
     
     for(int i=0;i<6;i++)
     {
-        pn = xhat[0];
-        pe = xhat[1];
+        //pn = xhat[0];
+        //pe = xhat[1];
         Vg = xhat[2];
         chi = xhat[3];
         wn = xhat[4];
