@@ -166,10 +166,30 @@ private:
 		float kd_roll;
 		float max_aileron_output;
 		float min_aileron_output;
+
 		float kp_course;
 		float ki_course;
 		float kd_course;
 		float max_course_output;
+
+		float kp_pitch;
+		float ki_pitch;
+		float kd_pitch;
+
+		float ki_alt;
+		float kp_alt;
+		float kd_alt;
+		float max_elevator_output;
+		float min_elevator_output;
+
+		float ki_VaByPitch;
+		float kp_VaByPitch;
+		float kd_VaByPitch;
+
+		float ki_VaByThrottle;
+		float kp_VaByThrottle;
+		float kd_VaByThrottle;
+
 		float tau;
 		float ts;
 
@@ -227,6 +247,25 @@ private:
 		param_t ki_course;
 		param_t kd_course;
 		param_t max_course_output;
+
+		param_t kp_pitch;
+		param_t ki_pitch;
+		param_t kd_pitch;
+		
+		param_t ki_alt;
+		param_t kp_alt;
+		param_t kd_alt;
+		param_t max_elevator_output;
+		param_t min_elevator_output;
+
+		param_t ki_VaByPitch;
+		param_t kp_VaByPitch;
+		param_t kd_VaByPitch;
+
+		param_t ki_VaByThrottle;
+		param_t kp_VaByThrottle;
+		param_t kd_VaByThrottle;
+
 		param_t tau;
 		param_t ts;
 

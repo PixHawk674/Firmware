@@ -145,5 +145,54 @@ PARAM_DEFINE_FLOAT(FW_TAU,0.03f);
  */
 PARAM_DEFINE_FLOAT(FW_TS, 0.01f);
 
+/**
+ * Altitude Take-Off Zone
+ *
+ * The FW UAV will be in take off mode until it
+ * reaches this height
+ */
+PARAM_DEFINE_FLOAT(ALT_TAKE_OFF_ZONE, 50.0f);
+
+/**
+ * Altitude Hold Zone
+ *
+ */
+PARAM_DEFINE_FLOAT(ALT_HOLD_ZONE, 20.0f);
+
+/**
+ * Pitch angle during Take Off
+ *
+ */
+PARAM_DEFINE_FLOAT(THETA_TAKE_OFF, 30.0f);
+
+/**
+ * Pitch Proportial Control Constant
+ *
+ */
+PARAM_DEFINE_FLOAT(FW_PITCH_P, 1.0f);
+
+/**
+ * Pitch Integral Control Constant
+ *
+ */
+PARAM_DEFINE_FLOAT(FW_PITCH_I, 1.0f);
+
+/**
+ * Pitch Derivative Control Constant
+ *
+ */
+PARAM_DEFINE_FLOAT(FW_PITCH_D, 0.0f);
+
+PARAM_DEFINE_FLOAT(FW_ALT_P, 1.0f);
+PARAM_DEFINE_FLOAT(FW_ALT_I, 1.0f);
+PARAM_DEFINE_FLOAT(FW_ALT_D, 0.0f);
+PARAM_DEFINE_FLOAT(FW_VA_BY_PITCH_P, 1.0f);
+PARAM_DEFINE_FLOAT(FW_VA_BY_PITCH_I, 1.0f);
+PARAM_DEFINE_FLOAT(FW_VA_BY_PITCH_D, 0.0f);
+PARAM_DEFINE_FLOAT(FW_VA_BY_THROTTLE_P, 1.0f);
+PARAM_DEFINE_FLOAT(FW_VA_BY_THROTTLE_I, 1.0f);
+PARAM_DEFINE_FLOAT(FW_VA_BY_THROTTLE_D, 0.0f);
+PARAM_DEFINE_FLOAT(FW_MAX_ELEVATOR_OUTPUT, 35.0f);
+PARAM_DEFINE_FLOAT(FW_MIN_ELEVATOR_OUTPUT, -35.0f);
 
 
