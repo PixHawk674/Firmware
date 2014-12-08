@@ -1,25 +1,63 @@
-#include <FixedWingController.h>
+#include "FixedWingController.h"
 
 namespace FixedWingController
 {
 
-FixedWingController::compute_lateral_control()
+void
+FixedWingController::compute_control()
 {
-	airspeed_scaling = _parameters.airspeed_trim / ((airspeed < _parameters.airspeed_min) ? _parameters.airspeed_min : airspeed);
 
 	/* If the aircraft is on ground reset the integrators */
-	if (_vehicle_status.condition_landed) {
-		_rollControl.reset();
-		_courseControl.reset();
+	if (_vehicle_status.condition_landed) 
+	{
+		_rollControl->reset();
+		_courseControl->reset();
+		_airspeedPitchHold_ctrl->reset();
+		_airspeedThrottleHold_ctrl->reset();
+		_altitudeHold_ctrl->reset();
 	}
 
-	// if in manual mode, don't run course control,
-	if(!_vcontrol_mode.flag_control_manual_enabled)
+	/* if lock integrator is active, set ki to zero 
+	if (_lock_integrator)
 	{
-		// compute the lateral controller
-		_courseControl.compute();  // course control writes to _x_command_phi, which is 
+		// to be implemented later
 	}
-	_rollControl.compute();	
+	*/
+
+	/* Run Longitudinal Controller */
+	float h = _x_hat.h;
+	float h_c = -1.0f*_x_command.h;
+
+	if(h < _parameters.altitude_takeoff_zone)
+	{
+		//In take-off zone
+		_delta_t = 1.0f;
+		_x_command.theta = _parameters.theta_takeoff*3.1415f/180.0f;
+	}
+	else if(h <= h_c - _parameters.altitude_hold_zone)
+	{
+		//In Climb Zone
+		_delta_t = 1;
+		_airspeedPitchHold_ctrl->compute();
+	}
+	else if(h >= h_c + _parameters.altitude_hold_zone)
+	{
+		//In Descend Zone
+		_delta_t = 0;
+		_airspeedPitchHold_ctrl->compute();
+	}
+	else
+	{
+		//In Altitude-Hold Zone
+		_airspeedThrottleHold_ctrl->compute();
+		_altitudeHold_ctrl->compute();
+	}
+	_pitchHold_ctrl->compute();
+
+	/* Run Lateral Controller */
+	_courseControl->compute();
+	_rollControl->compute();
+	_delta_r = 0; // for now, no slideslip controller
 }
 
 

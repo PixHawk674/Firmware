@@ -1,6 +1,6 @@
 #include "UAVpid.h"
 
-namespace UAVpid_UAV
+namespace UAVpid
 {
 UAVpid::UAVpid(float* input, float* output, float* setpoint, 
 	 float kp, float ki, float kd, float upper_limit, 
@@ -33,7 +33,7 @@ bool UAVpid::setOutputLimits(float upper_limit, float lower_limit)
 	return 1;
 }
 
-bool UAVpid::setGains(kp,ki,kd)
+bool UAVpid::setGains(float kp,float ki,float kd)
 {
 	_kp = kp;
 	_ki = ki;
@@ -66,11 +66,11 @@ bool UAVpid::compute()
 			_differentiator = (2*_tau-_ts)/(2*_tau+_ts)*_differentiator+2/(2*_tau+_ts)*(error-_error_dl);
 			_error_dl = _error;
 
-			u = sat(kp*error+ki*_integrator+kd*_differentiator, _upperLimit, _lowerLimit);
+			u = sat(_kp*error+_ki*_integrator+_kd*_differentiator, _upperLimit, _lowerLimit);
 			// integrator anti-windup scheme
 			if(_ki!=0)
 			{
-				u_unsat = kp*error+ki*_integrator+kd*_differentiator;
+				u_unsat = _kp*error+_ki*_integrator+_kd*_differentiator;
 				if(u!=u_unsat)
 				{
 					_integrator = _integrator + _ts/_ki*(u-u_unsat);

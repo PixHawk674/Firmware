@@ -22,6 +22,9 @@
 #include <uORB/topics/parameter_update.h>
 #include <uORB/topics/vehicle_global_position.h>
 #include <uORB/topics/vehicle_status.h>
+#include <uORB/topics/position_setpoint_triplet.h>
+#include <uORB/topics/x_command.h>
+#include <uORB/topics/x_hat.h>
 #include <systemlib/param/param.h>
 #include <systemlib/err.h>
 #include <systemlib/pid/pid.h> // to be removed
@@ -29,6 +32,7 @@
 #include <geo/geo.h>
 #include <systemlib/perf_counter.h>
 #include <systemlib/systemlib.h>
+#include <systemlib/UAVpid/UAVpid.h>
 #include <mathlib/mathlib.h>
 
 #include <ecl/attitude_fw/ecl_pitch_controller.h>
@@ -42,8 +46,8 @@
  */
 extern "C" __EXPORT int FixedWingControllerMain(int argc, char *argv[]);
 
-
-
+namespace FixedWingController
+{
 class FixedWingController
 {
 public:
@@ -87,7 +91,8 @@ private:
 	int 		_manual_sub;			/**< notification of manual control updates */
 	int		_global_pos_sub;		/**< global position subscription */
 	int		_vehicle_status_sub;		/**< vehicle status subscription */
-	int		_pos_sp_triplet_sub;		/**< waypoing subscriber (hack to get airspeed)
+	int		_pos_sp_triplet_sub;		/**< waypoing subscriber (hack to get airspeed)*/
+	int  		_x_hat_sub;			/**<subscribe to estimator output */
 
 	orb_advert_t	_rate_sp_pub;			/**< rate setpoint publication */
 	orb_advert_t	_attitude_sp_pub;		/**< attitude setpoint point */
@@ -166,6 +171,13 @@ private:
 		float kd_course;
 		float max_course_output;
 		float tau;
+		float ts;
+
+		// State Machine Parameters
+		float altitude_takeoff_zone;
+		float altitude_hold_zone;
+		float theta_takeoff;
+
 	}	_parameters;			/**< local copies of interesting parameters */
 
 	struct {
@@ -216,10 +228,15 @@ private:
 		param_t kd_course;
 		param_t max_course_output;
 		param_t tau;
+		param_t ts;
+
+		param_t altitude_hold_zone;
+		param_t altitude_takeoff_zone;
+		param_t theta_takeoff;
 	} _parameter_handles;		/**< handles for interesting parameters */
 
 
-	bool _lock_integrator // a boolean that is controlled by the vehicle control mode
+	//bool _lock_integrator; // a boolean that is controlled by the vehicle control mode
 
 	float _ts;
 	float _tau;
@@ -241,17 +258,10 @@ private:
 	float _sideslip_actuator_neg_limit;
 */
 
-
-/* These willl probably be deleted later
- */
-	ECL_RollController				_roll_ctrl;
-	ECL_PitchController				_pitch_ctrl;
-	ECL_YawController				_yaw_ctrl;
-
-	UAVpid.UAVpid*		_pitchHold_ctrl;
-	UAVpid.UAVpid*		_altitudeHold_ctrl;
-	UAVpid.UAVpid*		_airspeedPitchHold_ctrl;
-	UAVpid.UAVpid*		_airspeedThrottleHold_ctrl;
+	UAVpid::UAVpid*		_pitchHold_ctrl;
+	UAVpid::UAVpid*		_altitudeHold_ctrl;
+	UAVpid::UAVpid*		_airspeedPitchHold_ctrl;
+	UAVpid::UAVpid*		_airspeedThrottleHold_ctrl;
 
 	/**
 	 * Update our local parameter cache.
@@ -321,31 +331,59 @@ private:
 	 */
 	void		task_main();
 
+	/**
+	 * Publishes Actuator Commands.
+	 */
+	void		publish_actuators();
+
+	/**
+	 * Published a converted setpoint message - this is mainly a transitionary sort of program until we are fully migrated to new code style
+	 */
+	void		publish_converted_setpoint();
+
+	/**
+	 * Computes the control outputs
+	 */
+	void		compute_control();
+
 };
+
+} // end namespace
+
+namespace FixedWingControllerDaemon
+{
+	/* oddly, ERROR is not defined for c++ */
+	#ifdef ERROR
+	# undef ERROR
+	#endif
+	static const int ERROR = -1;
+
+FixedWingController::FixedWingController	*g_control = nullptr;
+}
 
 int FixedWingControllerMain(int argc, char *argv[])
 {
 	if (argc < 1)
-		errx(1, "usage: FixedWingController {start|stop|status}");
+		errx(1, "usage: FixedWingControllerDaemon {start|stop|status}");
 
 	if (!strcmp(argv[1], "start")) {
 
-		if (att_control::g_control != nullptr)
+		if (FixedWingControllerDaemon::g_control != nullptr)
 			errx(1, "already running");
 
-		att_control::g_control = new FixedWingController;
+		FixedWingControllerDaemon::g_control = new FixedWingController::FixedWingController;
 
-		if (att_control::g_control == nullptr)
+		if (FixedWingControllerDaemon::g_control == nullptr)
 			errx(1, "alloc failed");
 
-		if (OK != att_control::g_control->start()) {
-			delete att_control::g_control;
-			att_control::g_control = nullptr;
+		if (OK != FixedWingControllerDaemon::g_control->start()) {
+			delete FixedWingControllerDaemon::g_control;
+			FixedWingControllerDaemon::g_control = nullptr;
 			err(1, "start failed");
 		}
 
 		/* avoid memory fragmentation by not exiting start handler until the task has fully started */
-		while (att_control::g_control == nullptr || !att_control::g_control->task_running()) {
+		while (FixedWingControllerDaemon::g_control == nullptr || !FixedWingControllerDaemon::g_control->task_running()) {
 			usleep(50000);
 			printf(".");
 			fflush(stdout);
@@ -356,16 +394,16 @@ int FixedWingControllerMain(int argc, char *argv[])
 	}
 
 	if (!strcmp(argv[1], "stop")) {
-		if (att_control::g_control == nullptr)
+		if (FixedWingControllerDaemon::g_control == nullptr)
 			errx(1, "not running");
 
-		delete att_control::g_control;
-		att_control::g_control = nullptr;
+		delete FixedWingControllerDaemon::g_control;
+		FixedWingControllerDaemon::g_control = nullptr;
 		exit(0);
 	}
 
 	if (!strcmp(argv[1], "status")) {
-		if (att_control::g_control) {
+		if (FixedWingControllerDaemon::g_control) {
 			errx(0, "running");
 
 		} else {

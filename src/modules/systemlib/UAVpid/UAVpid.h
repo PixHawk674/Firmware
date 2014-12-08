@@ -1,3 +1,6 @@
+#ifndef _UAVPID
+#define _UAVPID
+
 namespace UAVpid
 {
 
@@ -10,7 +13,7 @@ public:
 
 	bool setOutputLimits(float upper_limit, float lower_limit);
 
-	bool setGains(kp,ki,kd);
+	bool setGains(float kp,float ki,float kd);
 	bool reset();
 	bool compute();
 	float getKp();
@@ -32,13 +35,15 @@ private:
 	float  _lowerLimit;
 
 	float  _kp;
-	float 	_ki;
-	float	_kp;
+	float  _ki;
+	float  _kd;
 
-	float 	_integrator;
-	float	_differentiator;
-	float	_error_dl;
+	float  _integrator;
+	float  _differentiator;
+	float  _error_dl;
 
 };
 
 } //end namespace
+
+#endif
