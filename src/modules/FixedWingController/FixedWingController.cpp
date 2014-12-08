@@ -101,6 +101,22 @@ FixedWingController::FixedWingController() :
 	_parameter_handles.max_course_output = param_find("FW_MAX_COURSE_OUTPUT");
 	_parameter_handles.tau = param_find("FW_TAU");
 	_parameter_handles.ts = param_find("FW_TS");
+
+	_parameter_handles.ts = param_find("FW_PITCH_P");
+	_parameter_handles.ts = param_find("FW_PITCH_I");
+	_parameter_handles.ts = param_find("FW_PITCH_D");
+	_parameter_handles.ts = param_find("FW_ALT_P");
+	_parameter_handles.ts = param_find("FW_ALT_I");
+	_parameter_handles.ts = param_find("FW_ALT_D");
+	_parameter_handles.ts = param_find("FW_VA_BY_PITCH_P");
+	_parameter_handles.ts = param_find("FW_VA_BY_PITCH_I");
+	_parameter_handles.ts = param_find("FW_VA_BY_PITCH_D");
+	_parameter_handles.ts = param_find("FW_VA_BY_THROTTLE_P");
+	_parameter_handles.ts = param_find("FW_VA_BY_THROTTLE_I");
+	_parameter_handles.ts = param_find("FW_VA_BY_THROTTLE_D");
+	_parameter_handles.ts = param_find("FW_MAX_ELEVATOR_OUTPUT");
+	_parameter_handles.ts = param_find("FW_MIN_ELEVATOR_OUTPUT");
+
 	_parameter_handles.altitude_takeoff_zone = param_find("ALT_TAKE_OFF_ZONE");
 	_parameter_handles.altitude_hold_zone = param_find("ALT_HOLD_ZONE");
 	_parameter_handles.theta_takeoff = param_find("THETA_TAKE_OFF");
@@ -188,13 +204,31 @@ FixedWingController::parameters_update()
 	param_get(_parameter_handles.ki_course, &(_parameters.ki_course));
 	param_get(_parameter_handles.kd_course, &(_parameters.kd_course));
 	param_get(_parameter_handles.max_course_output, &(_parameters.max_course_output));
+
+	param_get(_parameter_handles.kp_pitch, &(_parameters.kp_pitch));
+	param_get(_parameter_handles.ki_pitch, &(_parameters.ki_pitch));
+	param_get(_parameter_handles.kd_pitch, &(_parameters.kd_pitch));
+
+	param_get(_parameter_handles.ki_alt, &(_parameters.ki_alt));
+	param_get(_parameter_handles.kp_alt, &(_parameters.kp_alt));
+	param_get(_parameter_handles.kd_alt, &(_parameters.kd_alt));
+	param_get(_parameter_handles.max_elevator_output, &(_parameters.max_elevator_output));
+	param_get(_parameter_handles.min_elevator_output, &(_parameters.min_elevator_output));
+
+	param_get(_parameter_handles.ki_VaByPitch, &(_parameters.ki_VaByPitch));
+	param_get(_parameter_handles.kp_VaByPitch, &(_parameters.kp_VaByPitch));
+	param_get(_parameter_handles.kd_VaByPitch, &(_parameters.kd_VaByPitch));
+
+	param_get(_parameter_handles.ki_VaByThrottle, &(_parameters.ki_VaByThrottle));
+	param_get(_parameter_handles.kp_VaByThrottle, &(_parameters.kp_VaByThrottle));
+	param_get(_parameter_handles.kd_VaByThrottle, &(_parameters.kd_VaByThrottle));
+
 	param_get(_parameter_handles.tau, &(_parameters.tau));
 	param_get(_parameter_handles.ts, &(_parameters.ts));
+
 	param_get(_parameter_handles.altitude_hold_zone, & (_parameters.altitude_hold_zone));
 	param_get(_parameter_handles.altitude_takeoff_zone, & (_parameters.altitude_takeoff_zone));
 	param_get(_parameter_handles.theta_takeoff, & (_parameters.theta_takeoff));
-
-
 
 
 	/* NORIGINAL PARAMS */
@@ -296,21 +330,20 @@ FixedWingController::task_main()
 	struct pollfd fds[2];
 
 	//Initialize Pitch-Hold Controller
-	float pitch_ki = _parameters.p_i;
-	float pitch_kp = _parameters.p_p;
-	float pitch_kd = 0;
+	float pitch_ki = _parameters.ki_pitch;
+	float pitch_kp = _parameters.kp_pitch;
+	float pitch_kd = _parameters.kd_pitch;
 	float ts = _parameters.ts;
 	float pitch_tau = _parameters.tau;
-	float elevator_lim = 45.0 * (3.14159)/180.0;
 	_pitchHold_ctrl = new UAVpid(&_x_hat.theta, &_delta_e, &_x_command.theta,
 		pitch_kp, pitch_ki, pitch_kd, ts, pitch_tau,
-		elevator_lim, -1.0f*elevator_lim);
+		_parameters.max_elevator_output, _parameters.min_elevator_output);
 
 
 	//Initialize Altitude-Hold Controller
-	float alt_ki;
-	float alt_kp;
-	float alt_kd = 0;
+	float alt_ki = _parameters.ki_alt;
+	float alt_kp = _parameters.kp_alt;
+	float alt_kd = _parameters.kd_alt;
 	float alt_tau = _parameters.tau;
 	float theta_lim = 30.0 * (3.14159)/180.0;
 	_altitudeHold_ctrl = new UAVpid(&_x_hat.h, &_x_command.theta, &_x_command.h,
@@ -318,9 +351,9 @@ FixedWingController::task_main()
 		theta_lim, -theta_lim);
 
 	//Initialize Airspeed-With-Pitch-Hold Controller
-	float ASP_ki;
-	float ASP_kp;
-	float ASP_kd = 0;
+	float ASP_ki = _parameters.ki_VaByPitch;
+	float ASP_kp = _parameters.kp_VaByPitch;
+	float ASP_kd = _parameters.kd_VaByPitch;
 	float ASP_tau = _parameters.tau;
 	_airspeedPitchHold_ctrl = new UAVpid(&_x_hat.Va, &_x_command.theta, &_x_command.Va,
 		ASP_kp, ASP_ki, ASP_kd, ts, ASP_tau,
@@ -328,9 +361,9 @@ FixedWingController::task_main()
 
 
 	//Initialize Airspeed-With-Throttle-Hold Controller
-	float AST_ki;
-	float AST_kp;
-	float AST_kd = 0;
+	float AST_ki = _parameters.ki_VaByThrottle;
+	float AST_kp = _parameters.kp_VaByThrottle;
+	float AST_kd = _parameters.kd_VaByThrottle;
 	float AST_tau = _parameters.tau;
 	_airspeedThrottleHold_ctrl = new UAVpid(&_x_hat.Va, &_delta_t, &_x_command.Va,
 		AST_kp, AST_ki, AST_kd, ts, AST_tau,
