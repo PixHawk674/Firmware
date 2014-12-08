@@ -42,6 +42,7 @@
  */
 
 #include "FixedWingController.h"
+#include "FixedWingControllerDaemon.h"
 
 namespace FixedWingController
 {
@@ -301,7 +302,7 @@ FixedWingController::task_main()
 	float ts = _parameters.ts;
 	float pitch_tau = _parameters.tau;
 	float elevator_lim = 45.0 * (3.14159)/180.0;
-	_pitchHold_ctrl = new UAVpid::UAVpid(&_x_hat.theta, &_delta_e, &_x_command.theta,
+	_pitchHold_ctrl = new UAVpid(&_x_hat.theta, &_delta_e, &_x_command.theta,
 		pitch_kp, pitch_ki, pitch_kd, ts, pitch_tau,
 		elevator_lim, -1.0f*elevator_lim);
 
@@ -312,7 +313,7 @@ FixedWingController::task_main()
 	float alt_kd = 0;
 	float alt_tau = _parameters.tau;
 	float theta_lim = 30.0 * (3.14159)/180.0;
-	_altitudeHold_ctrl = new UAVpid::UAVpid(&_x_hat.h, &_x_command.theta, &_x_command.h,
+	_altitudeHold_ctrl = new UAVpid(&_x_hat.h, &_x_command.theta, &_x_command.h,
 		alt_kp, alt_ki, alt_kd, ts, alt_tau,
 		theta_lim, -theta_lim);
 
@@ -321,7 +322,7 @@ FixedWingController::task_main()
 	float ASP_kp;
 	float ASP_kd = 0;
 	float ASP_tau = _parameters.tau;
-	_airspeedPitchHold_ctrl = new UAVpid::UAVpid(&_x_hat.Va, &_x_command.theta, &_x_command.Va,
+	_airspeedPitchHold_ctrl = new UAVpid(&_x_hat.Va, &_x_command.theta, &_x_command.Va,
 		ASP_kp, ASP_ki, ASP_kd, ts, ASP_tau,
 		theta_lim, -theta_lim);
 
@@ -331,17 +332,17 @@ FixedWingController::task_main()
 	float AST_kp;
 	float AST_kd = 0;
 	float AST_tau = _parameters.tau;
-	_airspeedThrottleHold_ctrl = new UAVpid::UAVpid(&_x_hat.Va, &_delta_t, &_x_command.Va,
+	_airspeedThrottleHold_ctrl = new UAVpid(&_x_hat.Va, &_delta_t, &_x_command.Va,
 		AST_kp, AST_ki, AST_kd, ts, AST_tau,
 		1, 0);
 
 	//Initialize Roll Controller
-	_rollControl = new UAVpid::UAVpid(&_x_hat.phi, &_delta_a, &_x_command.phi,
+	_rollControl = new UAVpid(&_x_hat.phi, &_delta_a, &_x_command.phi,
 					 _parameters.kp_roll, _parameters.ki_roll, _parameters.kd_roll, _parameters.ts, 
 					 _parameters.tau, _parameters.max_aileron_output,_parameters.min_aileron_output);
 
 	// Initialize Course-Hold Controller
-	_courseControl = new UAVpid::UAVpid(&_x_hat.chi, &_x_command.phi, &_x_command.chi,
+	_courseControl = new UAVpid(&_x_hat.chi, &_x_command.phi, &_x_command.chi,
 				           _parameters.kp_course, _parameters.ki_course, _parameters.kd_course, _parameters.ts,
 					   _parameters.tau,_parameters.max_course_output,-1.0f*_parameters.max_course_output);
 
@@ -506,7 +507,7 @@ FixedWingController::start()
 	ASSERT(_control_task == -1);
 
 	/* start the task */
-	_control_task = task_spawn_cmd("fw_att_control",
+	_control_task = task_spawn_cmd("FixedWingController",
 				       SCHED_DEFAULT,
 				       SCHED_PRIORITY_MAX - 5,
 				       2048,

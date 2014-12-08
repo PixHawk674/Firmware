@@ -38,7 +38,7 @@
 MODULE_COMMAND	= FixedWingController
 
 SRCS		= FixedWingController.cpp \
-                  FixedWingControllerCompute.cpp\
+                  FixedWingControllerCompute.cpp \
 		  FixedWingControllerParams.c \
                   FixedWingControllerSubscribers.cpp \
                   FixedWingControllerPublishers.cpp

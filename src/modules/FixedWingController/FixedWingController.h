@@ -1,3 +1,6 @@
+#ifndef _FIXEDWINGCONTROLLER_H
+#define _FIXEDWINGCONTROLLER_H
+
 #include <nuttx/config.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,26 +31,20 @@
 #include <systemlib/param/param.h>
 #include <systemlib/err.h>
 #include <systemlib/pid/pid.h> // to be removed
-#include <systemlib/UAVpid/UAVpid.h>
 #include <geo/geo.h>
 #include <systemlib/perf_counter.h>
 #include <systemlib/systemlib.h>
-#include <systemlib/UAVpid/UAVpid.h>
+#include <controllib/UAVpid.h>
 #include <mathlib/mathlib.h>
 
 #include <ecl/attitude_fw/ecl_pitch_controller.h>
 #include <ecl/attitude_fw/ecl_roll_controller.h>
 #include <ecl/attitude_fw/ecl_yaw_controller.h>
 
-/**
- * Fixedwing attitude control app start / stop handling function
- *
- * @ingroup apps
- */
-extern "C" __EXPORT int FixedWingControllerMain(int argc, char *argv[]);
 
 namespace FixedWingController
 {
+
 class FixedWingController
 {
 public:
@@ -240,8 +237,8 @@ private:
 
 	float _ts;
 	float _tau;
-	UAVpid::UAVpid* _rollControl;
-	UAVpid::UAVpid* _courseControl;
+	UAVpid* _rollControl;
+	UAVpid* _courseControl;
 	float _phi_c;
 	float _chi_c;
 	float _delta_e;
@@ -258,10 +255,10 @@ private:
 	float _sideslip_actuator_neg_limit;
 */
 
-	UAVpid::UAVpid*		_pitchHold_ctrl;
-	UAVpid::UAVpid*		_altitudeHold_ctrl;
-	UAVpid::UAVpid*		_airspeedPitchHold_ctrl;
-	UAVpid::UAVpid*		_airspeedThrottleHold_ctrl;
+	UAVpid*		_pitchHold_ctrl;
+	UAVpid*		_altitudeHold_ctrl;
+	UAVpid*		_airspeedPitchHold_ctrl;
+	UAVpid*		_airspeedThrottleHold_ctrl;
 
 	/**
 	 * Update our local parameter cache.
@@ -348,69 +345,6 @@ private:
 
 };
 
-} // end namespace
+} // end namespace FixedWingController
 
-namespace FixedWingControllerDaemon
-{
-	/* oddly, ERROR is not defined for c++ */
-	#ifdef ERROR
-	# undef ERROR
-	#endif
-	static const int ERROR = -1;
-
-FixedWingController::FixedWingController	*g_control = nullptr;
-}
-
-int FixedWingControllerMain(int argc, char *argv[])
-{
-	if (argc < 1)
-		errx(1, "usage: FixedWingControllerDaemon {start|stop|status}");
-
-	if (!strcmp(argv[1], "start")) {
-
-		if (FixedWingControllerDaemon::g_control != nullptr)
-			errx(1, "already running");
-
-		FixedWingControllerDaemon::g_control = new FixedWingController::FixedWingController;
-
-		if (FixedWingControllerDaemon::g_control == nullptr)
-			errx(1, "alloc failed");
-
-		if (OK != FixedWingControllerDaemon::g_control->start()) {
-			delete FixedWingControllerDaemon::g_control;
-			FixedWingControllerDaemon::g_control = nullptr;
-			err(1, "start failed");
-		}
-
-		/* avoid memory fragmentation by not exiting start handler until the task has fully started */
-		while (FixedWingControllerDaemon::g_control == nullptr || !FixedWingControllerDaemon::g_control->task_running()) {
-			usleep(50000);
-			printf(".");
-			fflush(stdout);
-		}
-		printf("\n");
-
-		exit(0);
-	}
-
-	if (!strcmp(argv[1], "stop")) {
-		if (FixedWingControllerDaemon::g_control == nullptr)
-			errx(1, "not running");
-
-		delete FixedWingControllerDaemon::g_control;
-		FixedWingControllerDaemon::g_control = nullptr;
-		exit(0);
-	}
-
-	if (!strcmp(argv[1], "status")) {
-		if (FixedWingControllerDaemon::g_control) {
-			errx(0, "running");
-
-		} else {
-			errx(1, "not running");
-		}
-	}
-
-	warnx("unrecognized command");
-	return 1;
-}
+#endif
